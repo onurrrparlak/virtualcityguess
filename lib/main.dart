@@ -18,7 +18,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Map Guessing Game',
-      home: MapScreen(),
+      home: SafeArea(child: MapScreen()),
     );
   }
 }
@@ -79,7 +79,7 @@ class _MapScreenState extends State<MapScreen> {
           _timer?.cancel(); // Stop the timer
           if (!_timerExpired) {
             _timerExpired = true;
-            _openMapPopup(); // Show the timeout popup
+            _showOrRefreshMapPopup(); // Show the timeout popup
           }
         } else {
           _timerDuration--;
@@ -135,7 +135,7 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.fitBounds(
       bounds,
       options: FitBoundsOptions(
-          padding: EdgeInsets.all(50)), // Add some padding around the bounds
+          padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.05)), // Add some padding around the bounds
     );
 
     // Show SnackBar above the popup
@@ -152,23 +152,10 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _nextLocation() {
-  if (!_locationSubmitted) {
-    // If location is not submitted, show a message to the user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'You need to submit your location before proceeding to the next guess!'),
-        duration: Duration(seconds: 3),
-      ),
-    );
-
-    // Reset state for the next guess
     setState(() {
-      _showLineAndTargetMarker = false; // Reset _showLineAndTargetMarker
+      _showLineAndTargetMarker = false;
       _currentTargetIndex = (_currentTargetIndex + 1) % _locations.length;
       _currentLocation = _initialLocation;
-      _mapController.move(
-          _initialLocation, 1); // Reset to initial location and zoom out
       _showNextButton = false;
       _timerExpired = false; // Reset timer expired status
       _locationSubmitted = false; // Reset location submitted status
@@ -186,33 +173,20 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
     _storedBounds = null;
-  } else {
-    // If location was submitted, just move to the next location without resetting the state again
-    setState(() {
-      _currentTargetIndex = (_currentTargetIndex + 1) % _locations.length;
-      _currentLocation = _initialLocation;
-      _showLineAndTargetMarker = false; // Reset _showLineAndTargetMarker
+
+    // Close the popup if it's open
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
+    // Move map only if the map controller is active
+    if (_showLineAndTargetMarker || _timerExpired) {
       _mapController.move(
-          _initialLocation, 1); 
-          _storedBounds = null;// Reset to initial location and zoom out
-      _showNextButton = false; // Reset showNextButton
-    });
-
-    // Show SnackBar indicating the next location guess
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Now guess where the next location is!'),
-        duration: Duration(seconds: 3),
-      ),
-    );
+        _initialLocation,
+        1,
+      );
+    }
   }
-
-  // Close the popup if it's open
-  if (Navigator.of(context).canPop()) {
-    Navigator.of(context).pop();
-  }
-}
-
 
   void _showSnackBar(String message) {
     // Show SnackBar with the provided message
@@ -224,7 +198,16 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // Define a variable to store the bounds
+  void _showOrRefreshMapPopup() {
+    if (Navigator.of(context).canPop()) {
+      // If a popup is currently open, refresh its content
+      Navigator.of(context).pop();
+      _openMapPopup();
+    } else {
+      // If no popup is open, open a new one
+      _openMapPopup();
+    }
+  }
 
   void _openMapPopup() {
     showModalBottomSheet(
@@ -273,12 +256,18 @@ class _MapScreenState extends State<MapScreen> {
                         child: FlutterMap(
                           mapController: _mapController,
                           options: MapOptions(
-                            bounds:
-                                _storedBounds != null ? _storedBounds : null,
-                           boundsOptions:
-                                FitBoundsOptions(padding: EdgeInsets.all(50)),
-                            initialCenter: _initialLocation,
-                            initialZoom: 1.0,
+                            bounds: _storedBounds != null
+                                ? _storedBounds
+                                : null, // Remove bounds
+                            boundsOptions: FitBoundsOptions(
+                                padding: EdgeInsets.all(
+                                    MediaQuery.of(context).size.height * 0.05)), // Remove bounds options
+                            center: _timerExpired && !_locationSubmitted
+                                ? _currentTargetLocation
+                                : _initialLocation,
+                            zoom: _timerExpired && !_locationSubmitted
+                                ? 10.0
+                                : 1.0,
                             onTap: _timerExpired
                                 ? null
                                 : (tapPosition, point) {
@@ -296,17 +285,23 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                             MarkerLayer(
                               markers: [
-                                Marker(
-                                  point: _currentLocation,
-                                  width: 80,
-                                  height: 80,
-                                  child: Icon(
-                                    Icons.location_on,
-                                    color: Colors.red,
-                                    size: 30,
+                                if ((_locationSubmitted ||
+                                        (!_timerExpired &&
+                                            !_locationSubmitted)) ||
+                                    (_timerExpired &&
+                                        !_locationSubmitted)) // Show red marker if location is submitted or if timer expired and location is not submitted
+                                  Marker(
+                                    point: _currentLocation,
+                                    width: 80,
+                                    height: 80,
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: Colors.red,
+                                      size: 30,
+                                    ),
                                   ),
-                                ),
-                                if (_showLineAndTargetMarker)
+                                if (_showLineAndTargetMarker ||
+                                    _timerExpired) // Show target marker when timer expires
                                   Marker(
                                     point: _currentTargetLocation,
                                     width: 80,
@@ -319,7 +314,8 @@ class _MapScreenState extends State<MapScreen> {
                                   ),
                               ],
                             ),
-                            if (_showLineAndTargetMarker)
+                            if ((_locationSubmitted || !_timerExpired) &&
+                                _showLineAndTargetMarker) // Show polyline layer conditionally
                               PolylineLayer(
                                 polylines: [
                                   Polyline(
@@ -338,7 +334,7 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     if (!_showNextButton && !_timerExpired)
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
                         child: ElevatedButton(
                           onPressed: () => _submitLocation(setState),
                           child: Text('Submit Location'),
@@ -346,18 +342,18 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     if (_showNextButton || _timerExpired)
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
                         child: ElevatedButton(
                           onPressed: _nextLocation,
                           child: Text('Next'),
                         ),
                       ),
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
                       child: Text(
                         'Total Points: $_totalPoints',
                         style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                            fontSize: MediaQuery.of(context).size.height * 0.020, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -381,11 +377,14 @@ class _MapScreenState extends State<MapScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  padding:  EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.05),
                   child: Text(
-                    'Time Left: $_timerDuration seconds',
+                    _timerDuration == 0
+                        ? 'Time Expired'
+                        : 'Time Left: $_timerDuration seconds',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: MediaQuery.of(context).size.height * 0.020
+                      ,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -397,21 +396,21 @@ class _MapScreenState extends State<MapScreen> {
                       Expanded(
                         flex: 1,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                         padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.05),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               Text(
                                 'Scoreboard',
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: MediaQuery.of(context).size.height * 0.020,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
                                 'Total Points: $_totalPoints',
                                 style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold),
+                                    fontSize: MediaQuery.of(context).size.height * 0.020, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -434,13 +433,15 @@ class _MapScreenState extends State<MapScreen> {
           Expanded(
             flex: 1,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ElevatedButton(
-                    onPressed: _timerExpired ? null : _openMapPopup,
-                    child: Text('Guess Location'),
+                    onPressed: _showOrRefreshMapPopup,
+                    child: Text(_locationSubmitted || _timerExpired
+                        ? 'Show Results'
+                        : 'Guess Location'),
                   ),
                   if (_timerExpired == true)
                     ElevatedButton(
