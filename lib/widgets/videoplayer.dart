@@ -1,90 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
+
 class VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
 
-  VideoPlayerWidget({required this.videoUrl, Key? key}) : super(key: key);
+  VideoPlayerWidget({required this.videoUrl});
 
   @override
   _VideoPlayerWidgetState createState() => _VideoPlayerWidgetState();
 }
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
-  late VideoPlayerController _controller;
-  bool _isFullScreen = false;
+  late VideoPlayerController _videoPlayerController;
+  ChewieController? _chewieController;
 
   @override
   void initState() {
     super.initState();
-    _initializeController();
+    _initializeVideoPlayer();
   }
 
-  @override
-  void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
+   @override
+     void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.videoUrl != widget.videoUrl) {
-      _initializeController();
+      _initializeVideoPlayer();
     }
   }
 
-  void _initializeController() {
-    _controller = VideoPlayerController.network(widget.videoUrl)
+  void _initializeVideoPlayer() {
+    _videoPlayerController = VideoPlayerController.network(widget.videoUrl)
       ..initialize().then((_) {
-        setState(() {});
-        _controller.play(); // Play the video automatically
-      });
-  }
-
-  void _toggleFullScreen() {
-    setState(() {
-      _isFullScreen = !_isFullScreen;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        _controller.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              )
-            : Center(child: CircularProgressIndicator()), // Or any loading indicator
-        if (_isFullScreen)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GestureDetector(
-              onTap: _toggleFullScreen,
-              child: Container(
-                color: Colors.black.withOpacity(0.7),
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
-                  ),
-                ),
+        setState(() {
+          _chewieController = ChewieController(
+            videoPlayerController: _videoPlayerController,
+            autoPlay: true,
+            looping: true,
+            allowedScreenSleep: false,
+            allowPlaybackSpeedChanging: false,
+            allowMuting: false,
+            showControls: true,
+            materialProgressColors: ChewieProgressColors(
+              playedColor: Colors.red,
+              handleColor: Colors.red,
+              backgroundColor: Colors.grey,
+              bufferedColor: Colors.lightGreen,
+            ),
+            placeholder: Container(
+              color: Colors.grey,
+            ),
+            autoInitialize: true,
+            customControls: Container(
+              child: IconButton(
+                icon: Icon(Icons.fullscreen),
+                onPressed: () {
+                  _chewieController!.enterFullScreen();
+                },
               ),
             ),
-          ),
-        Positioned(
-          bottom: 10,
-          right: 10,
-          child: IconButton(
-            icon: Icon(_isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen),
-            onPressed: _toggleFullScreen,
-          ),
-        ),
-      ],
-    );
+          );
+        });
+      });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _videoPlayerController.dispose();
+    _chewieController?.dispose();
     super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
+        ? Chewie(controller: _chewieController!)
+        : Center(
+            child: CircularProgressIndicator(),
+          );
+  }
 }
+

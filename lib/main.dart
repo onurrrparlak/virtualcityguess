@@ -5,16 +5,22 @@ import 'package:video_player/video_player.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
 import 'dart:async';
 
-void main() => runApp(MyApp());
+void main() => runApp(MyApp(
+ 
+));
 
 class MyApp extends StatefulWidget {
+  
   @override
   State<MyApp> createState() => _MyAppState();
+  
 }
 
 class _MyAppState extends State<MyApp> {
+  
   @override
   Widget build(BuildContext context) {
+    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Map Guessing Game',
@@ -135,7 +141,7 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.fitBounds(
       bounds,
       options: FitBoundsOptions(
-          padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.05)), // Add some padding around the bounds
+          padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.045)), // Add some padding around the bounds
     );
 
     // Show SnackBar above the popup
@@ -261,7 +267,7 @@ class _MapScreenState extends State<MapScreen> {
                                 : null, // Remove bounds
                             boundsOptions: FitBoundsOptions(
                                 padding: EdgeInsets.all(
-                                    MediaQuery.of(context).size.height * 0.05)), // Remove bounds options
+                                    MediaQuery.of(context).size.height * 0.045)), // Remove bounds options
                             center: _timerExpired && !_locationSubmitted
                                 ? _currentTargetLocation
                                 : _initialLocation,
@@ -334,7 +340,7 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     if (!_showNextButton && !_timerExpired)
                       Padding(
-                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
+                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.005),
                         child: ElevatedButton(
                           onPressed: () => _submitLocation(setState),
                           child: Text('Submit Location'),
@@ -342,14 +348,14 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     if (_showNextButton || _timerExpired)
                       Padding(
-                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
+                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.005),
                         child: ElevatedButton(
                           onPressed: _nextLocation,
                           child: Text('Next'),
                         ),
                       ),
                     Padding(
-                      padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
+                      padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.005),
                       child: Text(
                         'Total Points: $_totalPoints',
                         style: TextStyle(
@@ -373,11 +379,11 @@ class _MapScreenState extends State<MapScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            flex: 9,
+            flex: 1,
             child: Column(
               children: [
                 Padding(
-                  padding:  EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.05),
+                  padding:  EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.005),
                   child: Text(
                     _timerDuration == 0
                         ? 'Time Expired'
@@ -394,9 +400,9 @@ class _MapScreenState extends State<MapScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Padding(
-                         padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.05),
+                         padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.005),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
@@ -433,7 +439,7 @@ class _MapScreenState extends State<MapScreen> {
           Expanded(
             flex: 1,
             child: Padding(
-              padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.05),
+              padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.001),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
