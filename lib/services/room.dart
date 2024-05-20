@@ -15,7 +15,31 @@ class FirestoreService {
     return roomId;
   }
 
-  Future<void> joinRoom(String roomId, String playerName) async {
+Future<void> joinRoom(String roomId, String playerName) async {
+  DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+  DocumentSnapshot roomSnapshot = await roomRef.get();
+
+  if (!roomSnapshot.exists) {
+    throw Exception('Room does not exist');
+  }
+
+  bool gameStarted = roomSnapshot['gameStarted'];
+  if (gameStarted) {
+    throw Exception('Game has already started, you cannot join.');
+  }
+
+  Map<String, int> players = Map<String, int>.from(roomSnapshot['players']);
+  if (!players.containsKey(playerName)) {
+    players[playerName] = 0; // Start the player with 0 points
+    await roomRef.update({'players': players});
+  }
+}
+
+
+
+
+  Future<void> updatePoints(
+      String roomId, String playerName, int points) async {
     DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
     await _firestore.runTransaction((transaction) async {
       DocumentSnapshot roomSnapshot = await transaction.get(roomRef);
@@ -23,28 +47,12 @@ class FirestoreService {
         throw Exception('Room does not exist');
       }
       Map<String, int> players = Map<String, int>.from(roomSnapshot['players']);
-      if (!players.containsKey(playerName)) {
-        players[playerName] = 0; // Start the player with 0 points
+      if (players.containsKey(playerName)) {
+        players[playerName] = points;
         transaction.update(roomRef, {'players': players});
       }
     });
   }
-
-  Future<void> updatePoints(String roomId, String playerName, int points) async {
-  DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
-  await _firestore.runTransaction((transaction) async {
-    DocumentSnapshot roomSnapshot = await transaction.get(roomRef);
-    if (!roomSnapshot.exists) {
-      throw Exception('Room does not exist');
-    }
-    Map<String, int> players = Map<String, int>.from(roomSnapshot['players']);
-    if (players.containsKey(playerName)) {
-      players[playerName] = points;
-      transaction.update(roomRef, {'players': players});
-    }
-  });
-}
-
 
   Future<void> startGame(String roomId) async {
     DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
@@ -53,6 +61,10 @@ class FirestoreService {
 
   Stream<DocumentSnapshot> getRoomStream(String roomId) {
     return _firestore.collection('rooms').doc(roomId).snapshots();
+  }
+
+  Future<void> deleteRoom(String roomId) async {
+    await _firestore.collection('rooms').doc(roomId).delete();
   }
 
   String _generateRoomId() {

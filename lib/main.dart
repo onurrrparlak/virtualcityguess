@@ -47,7 +47,7 @@ class MapScreen extends StatefulWidget {
   _MapScreenState createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final FirestoreService _firestoreService = FirestoreService();
@@ -96,9 +96,35 @@ class _MapScreenState extends State<MapScreen> {
     _isHost = widget.isHost;
   }
 
+  @override
+  void deactivate() {
+    if (_isHost) {
+      _firestoreService.deleteRoom(widget.roomId);
+    }
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _timer?.cancel(); // Cancel timer to avoid memory leaks
+    print(_isHost);
+    if (_isHost) {
+      _firestoreService.deleteRoom(widget.roomId);
+    }
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+ void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    print(_isHost);
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
+      if (_isHost) {
+        
+        _firestoreService.deleteRoom(widget.roomId);
+      }
+    }
   }
 
   void startTimer() {
@@ -440,138 +466,146 @@ class _MapScreenState extends State<MapScreen> {
           }
         }
 
-        return Scaffold(
-          key: _scaffoldKey,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 1,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SelectableText(
-                          'Room ID: ${widget.roomId}',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.copy),
-                          onPressed: () {
-                            Clipboard.setData(
-                                ClipboardData(text: widget.roomId));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Room ID copied to clipboard')),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    if (_isHost && !_gameStarted)
-                      ElevatedButton(
-                        onPressed: _startGame,
-                        child: Text('Start Game'),
-                      ),
-                    if (_gameStarted) // Show game components when the game has started
-                      Text('Game has started!'),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                          vertical: MediaQuery.of(context).size.height * 0.005),
-                      child: Text(
-                        _timerDuration == 0
-                            ? 'Time Expired'
-                            : 'Time Left: $_timerDuration seconds',
-                        style: TextStyle(
-                            fontSize:
-                                MediaQuery.of(context).size.height * 0.020,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+        return SafeArea(
+          child: Scaffold(
+            key: _scaffoldKey,
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    children: [
+                      if (!_gameStarted)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: MediaQuery.of(context).size.height *
-                                      0.005),
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text(
-                                    'Scoreboard',
-                                    style: TextStyle(
-                                        fontSize:
-                                            MediaQuery.of(context).size.height *
-                                                0.020,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  ...sortedPoints
-                                      .map((entry) => Text(
-                                            '${entry.key}: ${entry.value} Points',
-                                            style: TextStyle(
-                                              fontSize: MediaQuery.of(context)
-                                                      .size
-                                                      .height *
-                                                  0.018,
-                                            ),
-                                          ))
-                                      .toList(),
-                                ],
-                              ),
-                            ),
+                           
+                          SelectableText(
+                            'Room ID: ${widget.roomId}',
+                            style: TextStyle(fontSize: 16),
                           ),
-                          Expanded(
-                            flex: 19,
-                            child: Center(
-                              child: _gameStarted
-                                  ? VideoPlayerWidget(
-                                      videoUrl: _locationVideoUrls[
-                                          _currentTargetIndex],
-                                    )
-                                  : Text(
-                                      _isHost
-                                          ? 'Players waiting for you to start the game..'
-                                          : 'Waiting for the host to start the game...',
-                                    ),
-                            ),
+                          IconButton(
+                            icon: Icon(Icons.copy),
+                            onPressed: () {
+                              Clipboard.setData(
+                                  ClipboardData(text: widget.roomId));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content:
+                                        Text('Room ID copied to clipboard')),
+                              );
+                            },
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: EdgeInsets.all(
-                      MediaQuery.of(context).size.height * 0.001),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_gameStarted)
+                      if (_isHost && !_gameStarted)
                         ElevatedButton(
-                          onPressed: () => _showOrRefreshMapPopup(context),
-                          child: Text(_locationSubmitted || _timerExpired
-                              ? 'Show Results'
-                              : 'Guess Location'),
+                          onPressed: _startGame,
+                          child: Text('Start Game'),
                         ),
-                      if (_timerExpired == true)
-                        ElevatedButton(
-                          onPressed: _nextLocation,
-                          child: Text('Next'),
+                      if (_gameStarted) // Show game components when the game has started
+                        Text('Game has started!'),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            vertical:
+                                MediaQuery.of(context).size.height * 0.005),
+                        child: Text(
+                          _timerDuration == 0
+                              ? 'Time Expired'
+                              : 'Time Left: $_timerDuration seconds',
+                          style: TextStyle(
+                              fontSize:
+                                  MediaQuery.of(context).size.height * 0.020,
+                              fontWeight: FontWeight.bold),
                         ),
+                      ),
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical:
+                                        MediaQuery.of(context).size.height *
+                                            0.005),
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Text(
+                                      'Scoreboard',
+                                      style: TextStyle(
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.020,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    ...sortedPoints
+                                        .map((entry) => Text(
+                                              '${entry.key}: ${entry.value} Points',
+                                              style: TextStyle(
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.018,
+                                              ),
+                                            ))
+                                        .toList(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 19,
+                              child: Center(
+                                child: _gameStarted
+                                    ? VideoPlayerWidget(
+                                        videoUrl: _locationVideoUrls[
+                                            _currentTargetIndex],
+                                      )
+                                    : Text(
+                                        _isHost
+                                            ? 'Players waiting for you to start the game..'
+                                            : 'Waiting for the host to start the game...',
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                        MediaQuery.of(context).size.height * 0.001),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_gameStarted)
+                          ElevatedButton(
+                            onPressed: () => _showOrRefreshMapPopup(context),
+                            child: Text(_locationSubmitted || _timerExpired
+                                ? 'Show Results'
+                                : 'Guess Location'),
+                          ),
+                        if (_timerExpired == true)
+                          ElevatedButton(
+                            onPressed: _nextLocation,
+                            child: Text('Next'),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

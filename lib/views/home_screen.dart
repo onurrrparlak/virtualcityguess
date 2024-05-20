@@ -28,20 +28,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
 void _joinRoom() async {
-  print("tıkladın");
   if (_roomId.isNotEmpty && _playerName.isNotEmpty) {
     try {
       await _firestoreService.joinRoom(_roomId, _playerName);
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MapScreen(roomId: _roomId, playerName: _playerName, isHost: false), // Set isHost to false
+          builder: (context) => MapScreen(roomId: _roomId, playerName: _playerName, isHost: false),
         ),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Room does not exist'),
-      ));
+    } on Exception catch (e) {
+      if (e.toString() == 'Exception: Room does not exist') {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Room does not exist'),
+        ));
+      } else if (e.toString() == 'Exception: Game has already started, you cannot join.') {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Game has already started, you cannot join.'),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('An error occurred'),
+        ));
+      }
     }
   }
 }
@@ -50,10 +59,14 @@ void _joinRoom() async {
 
 
 
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Map Guessing Game')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
