@@ -27,8 +27,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    print("bra");
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Map Guessing Game',
@@ -125,7 +123,7 @@ class _MapScreenState extends State<MapScreen> {
     await _firestoreService.startGame(widget.roomId);
   }
 
-  void _submitLocation(StateSetter updateState) {
+  void _submitLocation(StateSetter updateState) async {
     final distance = Distance().as(
       LengthUnit.Meter,
       _currentLocation,
@@ -155,6 +153,8 @@ class _MapScreenState extends State<MapScreen> {
       _playerPoint += points;
     });
 
+    await _firestoreService.updatePoints(
+        widget.roomId, widget.playerName, _playerPoint);
     if (mounted) {
       // Check if the widget is still mounted
       updateState(() {
@@ -423,21 +423,15 @@ class _MapScreenState extends State<MapScreen> {
           return CircularProgressIndicator();
         }
         if (snapshot.connectionState == ConnectionState.active) {
-          List<MapEntry<String, dynamic>> sortedPoints = [];
           if (snapshot.hasData) {
             var roomData = snapshot.data!.data() as Map<String, dynamic>;
-            _currentTargetIndex = roomData['currentTargetIndex'];
-            Map<String, dynamic> points = roomData['points'] ?? {};
-            List<MapEntry<String, dynamic>> sortedPoints = points.entries
-                .toList()
-              ..sort((a, b) => b.value.compareTo(a.value));
-            //_playerPoint = roomData['totalPoints'];
-            _gameStarted = roomData['gameStarted'];
+            //_currentTargetIndex = roomData['currentTargetIndex'];
 
-            if (_gameStarted) {
-              sortedPoints = points.entries.toList()
-                ..sort((a, b) => b.value.compareTo(a.value));
-            }
+            Map<String, dynamic> players = roomData['players'] ?? {};
+            sortedPoints = players.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
+
+            _gameStarted = roomData['gameStarted'];
 
             if (_gameStarted && _timer == null) {
               // Start the timer and video when the game starts
@@ -517,17 +511,17 @@ class _MapScreenState extends State<MapScreen> {
                                                 0.020,
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  ...sortedPoints.map(
-                                    (entry) => Text(
-                                      '${entry.key}: ${entry.value} points',
-                                      style: TextStyle(
-                                          fontSize: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.020,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
+                                  ...sortedPoints
+                                      .map((entry) => Text(
+                                            '${entry.key}: ${entry.value} Points',
+                                            style: TextStyle(
+                                              fontSize: MediaQuery.of(context)
+                                                      .size
+                                                      .height *
+                                                  0.018,
+                                            ),
+                                          ))
+                                      .toList(),
                                 ],
                               ),
                             ),
