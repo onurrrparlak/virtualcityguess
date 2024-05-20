@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "257206606371",
+    "project_id": "virtualcityguess",
+    "storage_bucket": "virtualcityguess.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257206606371:android:c9e5e141cca3dd82a4af96",
+        "android_client_info": {
+          "package_name": "com.wivizo.virtualcityguess"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsnBJU8ndzaUc3WAhuYhdjUpoaPmT5pbI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

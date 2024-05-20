@@ -1,40 +1,56 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'firebase_options.dart';
 import 'package:video_player/video_player.dart';
+import 'package:virtualcityguess/services/room.dart';
+import 'package:virtualcityguess/views/home_screen.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
 import 'dart:async';
 
-void main() => runApp(MyApp(
- 
-));
+void main() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(MyApp());
+}
 
 class MyApp extends StatefulWidget {
-  
   @override
   State<MyApp> createState() => _MyAppState();
-  
 }
 
 class _MyAppState extends State<MyApp> {
-  
   @override
   Widget build(BuildContext context) {
-    
+    print("bra");
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Map Guessing Game',
-      home: SafeArea(child: MapScreen()),
+      home: SafeArea(child: HomeScreen()),
     );
   }
 }
 
 class MapScreen extends StatefulWidget {
+  final String roomId;
+  final String playerName;
+  final bool isHost;
+
+  MapScreen(
+      {required this.roomId, required this.playerName, required this.isHost});
+
   @override
   _MapScreenState createState() => _MapScreenState();
 }
 
 class _MapScreenState extends State<MapScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
+  late Stream<DocumentSnapshot> _roomStream;
   int _timerDuration = 60;
   Timer? _timer;
   bool _timerExpired = false;
@@ -59,6 +75,8 @@ class _MapScreenState extends State<MapScreen> {
     // Add other video URLs here
   ];
 
+  bool _isHost = false;
+  bool _gameStarted = false;
   int _currentTargetIndex = 0;
   bool _showLineAndTargetMarker = false;
   LatLngBounds? _storedBounds;
@@ -73,25 +91,35 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    startTimer();
+    _roomStream = _firestoreService.getRoomStream(widget.roomId);
+    _isHost = widget.isHost;
+  }
+
+  void dispose() {
+    _timer?.cancel(); // Cancel timer to avoid memory leaks
+    super.dispose();
   }
 
   void startTimer() {
     const oneSecond = Duration(seconds: 1);
-    _timer?.cancel(); // Cancel any existing timer
+    _timer?.cancel();
     _timer = Timer.periodic(oneSecond, (timer) {
       setState(() {
         if (_timerDuration < 1) {
-          _timer?.cancel(); // Stop the timer
+          _timer?.cancel();
           if (!_timerExpired) {
             _timerExpired = true;
-            _showOrRefreshMapPopup(); // Show the timeout popup
+            _showOrRefreshMapPopup();
           }
         } else {
           _timerDuration--;
         }
       });
     });
+  }
+
+  void _startGame() async {
+    await _firestoreService.startGame(widget.roomId);
   }
 
   void _submitLocation(StateSetter updateState) {
@@ -141,7 +169,8 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.fitBounds(
       bounds,
       options: FitBoundsOptions(
-          padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.045)), // Add some padding around the bounds
+          padding: EdgeInsets.all(MediaQuery.of(context).size.height *
+              0.045)), // Add some padding around the bounds
     );
 
     // Show SnackBar above the popup
@@ -267,7 +296,8 @@ class _MapScreenState extends State<MapScreen> {
                                 : null, // Remove bounds
                             boundsOptions: FitBoundsOptions(
                                 padding: EdgeInsets.all(
-                                    MediaQuery.of(context).size.height * 0.045)), // Remove bounds options
+                                    MediaQuery.of(context).size.height *
+                                        0.045)), // Remove bounds options
                             center: _timerExpired && !_locationSubmitted
                                 ? _currentTargetLocation
                                 : _initialLocation,
@@ -340,7 +370,8 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     if (!_showNextButton && !_timerExpired)
                       Padding(
-                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.005),
+                        padding: EdgeInsets.all(
+                            MediaQuery.of(context).size.height * 0.005),
                         child: ElevatedButton(
                           onPressed: () => _submitLocation(setState),
                           child: Text('Submit Location'),
@@ -348,18 +379,22 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     if (_showNextButton || _timerExpired)
                       Padding(
-                        padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.005),
+                        padding: EdgeInsets.all(
+                            MediaQuery.of(context).size.height * 0.005),
                         child: ElevatedButton(
                           onPressed: _nextLocation,
                           child: Text('Next'),
                         ),
                       ),
                     Padding(
-                      padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.005),
+                      padding: EdgeInsets.all(
+                          MediaQuery.of(context).size.height * 0.005),
                       child: Text(
                         'Total Points: $_totalPoints',
                         style: TextStyle(
-                            fontSize: MediaQuery.of(context).size.height * 0.020, fontWeight: FontWeight.bold),
+                            fontSize:
+                                MediaQuery.of(context).size.height * 0.020,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -374,95 +409,163 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: [
-                Padding(
-                  padding:  EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.005),
-                  child: Text(
-                    _timerDuration == 0
-                        ? 'Time Expired'
-                        : 'Time Left: $_timerDuration seconds',
-                    style: TextStyle(
-                      fontSize: MediaQuery.of(context).size.height * 0.020
-                      ,
-                      fontWeight: FontWeight.bold,
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _roomStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active) {
+          if (snapshot.hasData) {
+            var roomData = snapshot.data!.data() as Map<String, dynamic>;
+            _currentTargetIndex = roomData['currentTargetIndex'];
+            _totalPoints = roomData['totalPoints'];
+            _gameStarted = roomData['gameStarted'];
+
+            if (_gameStarted && _timer == null) {
+              // Start the timer and video when the game starts
+              startTimer();
+            }
+          }
+        }
+
+        return Scaffold(
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 1,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SelectableText(
+                          'Room ID: ${widget.roomId}',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.copy),
+                          onPressed: () {
+                            Clipboard.setData(
+                                ClipboardData(text: widget.roomId));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Room ID copied to clipboard')),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  ),
+                    if (_isHost && !_gameStarted)
+                      ElevatedButton(
+                        onPressed: _startGame,
+                        child: Text('Start Game'),
+                      ),
+                    if (_gameStarted) // Show game components when the game has started
+                      Text('Game has started!'),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                          vertical: MediaQuery.of(context).size.height * 0.005),
+                      child: Text(
+                        _timerDuration == 0
+                            ? 'Time Expired'
+                            : 'Time Left: $_timerDuration seconds',
+                        style: TextStyle(
+                            fontSize:
+                                MediaQuery.of(context).size.height * 0.020,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: MediaQuery.of(context).size.height *
+                                      0.005),
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text(
+                                    'Scoreboard',
+                                    style: TextStyle(
+                                        fontSize:
+                                            MediaQuery.of(context).size.height *
+                                                0.020,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Total Points: $_totalPoints',
+                                    style: TextStyle(
+                                        fontSize:
+                                            MediaQuery.of(context).size.height *
+                                                0.020,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 19,
+                            child: Center(
+                              child: _gameStarted
+                                  ? VideoPlayerWidget(
+                                      videoUrl: _locationVideoUrls[
+                                          _currentTargetIndex],
+                                    )
+                                  : Text(
+                                      'Waiting for the host to start the game...'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: Row(
+              ),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: EdgeInsets.all(
+                      MediaQuery.of(context).size.height * 0.001),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        flex: 2,
-                        child: Padding(
-                         padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.005),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Text(
-                                'Scoreboard',
-                                style: TextStyle(
-                                  fontSize: MediaQuery.of(context).size.height * 0.020,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Total Points: $_totalPoints',
-                                style: TextStyle(
-                                    fontSize: MediaQuery.of(context).size.height * 0.020, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ),
+                      ElevatedButton(
+                        onPressed: _showOrRefreshMapPopup,
+                        child: Text(_locationSubmitted || _timerExpired
+                            ? 'Show Results'
+                            : 'Guess Location'),
                       ),
-                      Expanded(
-                        flex: 19,
-                        child: Center(
-                          child: VideoPlayerWidget(
-                            videoUrl: _locationVideoUrls[_currentTargetIndex],
-                          ),
+                      if (_timerExpired == true)
+                        ElevatedButton(
+                          onPressed: _nextLocation,
+                          child: Text('Next'),
+                        ),
+                      Padding(
+                        padding: EdgeInsets.all(
+                            MediaQuery.of(context).size.height * 0.001),
+                        child: Text(
+                          _locationSubmitted
+                              ? 'Location Submitted'
+                              : 'Location Not Submitted',
+                          style: TextStyle(
+                              fontSize:
+                                  MediaQuery.of(context).size.height * 0.020,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding:  EdgeInsets.all(MediaQuery.of(context).size.height * 0.001),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ElevatedButton(
-                    onPressed: _showOrRefreshMapPopup,
-                    child: Text(_locationSubmitted || _timerExpired
-                        ? 'Show Results'
-                        : 'Guess Location'),
-                  ),
-                  if (_timerExpired == true)
-                    ElevatedButton(
-                      onPressed: _nextLocation,
-                      child: Text('Next'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[700],
-                      ),
-                    ),
-                ],
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

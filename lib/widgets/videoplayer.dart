@@ -14,6 +14,7 @@ class VideoPlayerWidget extends StatefulWidget {
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
+  bool _isFullScreen = false;
 
   @override
   void initState() {
@@ -21,10 +22,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     _initializeVideoPlayer();
   }
 
-   @override
-     void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
+  @override
+  void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.videoUrl != widget.videoUrl) {
+      
       _initializeVideoPlayer();
     }
   }
@@ -51,11 +53,15 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               color: Colors.grey,
             ),
             autoInitialize: true,
+            fullScreenByDefault: _isFullScreen,
             customControls: Container(
               child: IconButton(
                 icon: Icon(Icons.fullscreen),
                 onPressed: () {
-                  _chewieController!.enterFullScreen();
+                  setState(() {
+                    _isFullScreen = !_isFullScreen;
+                    _chewieController?.enterFullScreen();
+                  });
                 },
               ),
             ),
