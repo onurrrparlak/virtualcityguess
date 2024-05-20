@@ -179,6 +179,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _playerPoint += points;
     });
 
+    // Update submittedPlayers in Firestore
+  await _firestoreService.updatePlayerSubmissionStatus(widget.roomId, widget.playerName, true);
+
+  // Check if all players have submitted their locations
+  final allPlayersSubmitted = await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
+  if (allPlayersSubmitted || _timerDuration == 0) {
+    
+  }
+
     await _firestoreService.updatePoints(
         widget.roomId, widget.playerName, _playerPoint);
     if (mounted) {
@@ -218,42 +227,61 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _nextLocation() {
-    setState(() {
-      _showLineAndTargetMarker = false;
-      _currentTargetIndex = (_currentTargetIndex + 1) % _locations.length;
-      _currentLocation = _initialLocation;
-      _showNextButton = false;
-      _timerExpired = false; // Reset timer expired status
-      _locationSubmitted = false; // Reset location submitted status
-      _timerDuration = 60; // Reset timer duration
-    });
-
-    // Restart the timer
-    startTimer();
-
-    // Show SnackBar indicating the next location guess
+ void _nextLocation() async {
+  // Check if all players have submitted their locations
+  final allPlayersSubmitted = await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
+  
+  if (!allPlayersSubmitted) {
+    // Show a message indicating that all players need to submit their locations
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Now guess where the next location is!'),
+        content: Text('Not all players have submitted their locations yet.'),
         duration: Duration(seconds: 3),
       ),
     );
-    _storedBounds = null;
-
-    // Close the popup if it's open
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-
-    // Move map only if the map controller is active
-    if (_showLineAndTargetMarker || _timerExpired) {
-      _mapController.move(
-        _initialLocation,
-        1,
-      );
-    }
+    return; // Exit the function without advancing to the next round
   }
+  
+  // Update submittedPlayers in Firestore to mark the current player as not submitted
+  await _firestoreService.updatePlayerSubmissionStatus(widget.roomId, widget.playerName, false);
+  
+  setState(() {
+    // Reset various states
+    _showLineAndTargetMarker = false;
+    _currentTargetIndex = (_currentTargetIndex + 1) % _locations.length;
+    _currentLocation = _initialLocation;
+    _showNextButton = false;
+    _timerExpired = false; // Reset timer expired status
+    _locationSubmitted = false; // Reset location submitted status
+    _timerDuration = 60; // Reset timer duration
+  });
+
+  // Restart the timer
+  startTimer();
+
+  // Show SnackBar indicating the next location guess
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Now guess where the next location is!'),
+      duration: Duration(seconds: 3),
+    ),
+  );
+  _storedBounds = null;
+
+  // Close the popup if it's open
+  if (Navigator.of(context).canPop()) {
+    Navigator.of(context).pop();
+  }
+
+  // Move map only if the map controller is active
+  if (_showLineAndTargetMarker || _timerExpired) {
+    _mapController.move(
+      _initialLocation,
+      1,
+    );
+  }
+}
+
 
   void _showSnackBar(String message) {
     // Show SnackBar with the provided message
