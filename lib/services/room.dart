@@ -9,9 +9,7 @@ class FirestoreService {
     String roomId = _generateRoomId();
     await _firestore.collection('rooms').doc(roomId).set({
       'players': [],
-      'totalPoints': 0,
       'currentTargetIndex': 0,
-      'timerDuration': 60,
       'gameStarted': false, // Add this line
     });
     return roomId;

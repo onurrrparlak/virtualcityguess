@@ -5,13 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'firebase_options.dart';
-import 'package:video_player/video_player.dart';
 import 'package:virtualcityguess/services/room.dart';
 import 'package:virtualcityguess/views/home_screen.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
 import 'dart:async';
 
 void main() async {
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensure Flutter binding is initialized
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -49,6 +50,8 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final FirestoreService _firestoreService = FirestoreService();
   late Stream<DocumentSnapshot> _roomStream;
   int _timerDuration = 60;
@@ -82,7 +85,7 @@ class _MapScreenState extends State<MapScreen> {
   LatLngBounds? _storedBounds;
   bool _showNextButton = false;
   MapController _mapController = MapController();
-  int _totalPoints = 0; // Store total points
+  int _playerPoint = 0; // Store total points
   LatLng _currentLocation = LatLng(15, 15);
   LatLng _initialLocation = LatLng(15, 15);
 
@@ -109,7 +112,7 @@ class _MapScreenState extends State<MapScreen> {
           _timer?.cancel();
           if (!_timerExpired) {
             _timerExpired = true;
-            _showOrRefreshMapPopup();
+            _showOrRefreshMapPopup(context);
           }
         } else {
           _timerDuration--;
@@ -149,14 +152,17 @@ class _MapScreenState extends State<MapScreen> {
 
     // Update total points
     setState(() {
-      _totalPoints += points;
+      _playerPoint += points;
     });
 
-    updateState(() {
-      _showLineAndTargetMarker = true;
-      _showNextButton =
-          true; // Set _showNextButton to true after submitting location
-    });
+    if (mounted) {
+      // Check if the widget is still mounted
+      updateState(() {
+        _showLineAndTargetMarker = true;
+        _showNextButton =
+            true; // Set _showNextButton to true after submitting location
+      });
+    }
 
     // Set locationSubmitted to true
     _locationSubmitted = true;
@@ -233,18 +239,18 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  void _showOrRefreshMapPopup() {
-    if (Navigator.of(context).canPop()) {
-      // If a popup is currently open, refresh its content
+  _showOrRefreshMapPopup(BuildContext context) {
+    if (_scaffoldKey.currentState!.isDrawerOpen) {
+      // If a bottom sheet is currently open, refresh its content
       Navigator.of(context).pop();
-      _openMapPopup();
+      _openMapPopup(context);
     } else {
-      // If no popup is open, open a new one
-      _openMapPopup();
+      // If no bottom sheet is open, open a new one
+      _openMapPopup(context);
     }
   }
 
-  void _openMapPopup() {
+  void _openMapPopup(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -390,7 +396,7 @@ class _MapScreenState extends State<MapScreen> {
                       padding: EdgeInsets.all(
                           MediaQuery.of(context).size.height * 0.005),
                       child: Text(
-                        'Total Points: $_totalPoints',
+                        'Total Points: $_playerPoint',
                         style: TextStyle(
                             fontSize:
                                 MediaQuery.of(context).size.height * 0.020,
@@ -412,12 +418,26 @@ class _MapScreenState extends State<MapScreen> {
     return StreamBuilder<DocumentSnapshot>(
       stream: _roomStream,
       builder: (context, snapshot) {
+        List<MapEntry<String, dynamic>> sortedPoints = [];
+        if (!snapshot.hasData) {
+          return CircularProgressIndicator();
+        }
         if (snapshot.connectionState == ConnectionState.active) {
+          List<MapEntry<String, dynamic>> sortedPoints = [];
           if (snapshot.hasData) {
             var roomData = snapshot.data!.data() as Map<String, dynamic>;
             _currentTargetIndex = roomData['currentTargetIndex'];
-            _totalPoints = roomData['totalPoints'];
+            Map<String, dynamic> points = roomData['points'] ?? {};
+            List<MapEntry<String, dynamic>> sortedPoints = points.entries
+                .toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
+            //_playerPoint = roomData['totalPoints'];
             _gameStarted = roomData['gameStarted'];
+
+            if (_gameStarted) {
+              sortedPoints = points.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value));
+            }
 
             if (_gameStarted && _timer == null) {
               // Start the timer and video when the game starts
@@ -427,6 +447,7 @@ class _MapScreenState extends State<MapScreen> {
         }
 
         return Scaffold(
+          key: _scaffoldKey,
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -496,13 +517,16 @@ class _MapScreenState extends State<MapScreen> {
                                                 0.020,
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  Text(
-                                    'Total Points: $_totalPoints',
-                                    style: TextStyle(
-                                        fontSize:
-                                            MediaQuery.of(context).size.height *
-                                                0.020,
-                                        fontWeight: FontWeight.bold),
+                                  ...sortedPoints.map(
+                                    (entry) => Text(
+                                      '${entry.key}: ${entry.value} points',
+                                      style: TextStyle(
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.020,
+                                          fontWeight: FontWeight.bold),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -517,7 +541,10 @@ class _MapScreenState extends State<MapScreen> {
                                           _currentTargetIndex],
                                     )
                                   : Text(
-                                      'Waiting for the host to start the game...'),
+                                      _isHost
+                                          ? 'Players waiting for you to start the game..'
+                                          : 'Waiting for the host to start the game...',
+                                    ),
                             ),
                           ),
                         ],
@@ -534,30 +561,18 @@ class _MapScreenState extends State<MapScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ElevatedButton(
-                        onPressed: _showOrRefreshMapPopup,
-                        child: Text(_locationSubmitted || _timerExpired
-                            ? 'Show Results'
-                            : 'Guess Location'),
-                      ),
+                      if (_gameStarted)
+                        ElevatedButton(
+                          onPressed: () => _showOrRefreshMapPopup(context),
+                          child: Text(_locationSubmitted || _timerExpired
+                              ? 'Show Results'
+                              : 'Guess Location'),
+                        ),
                       if (_timerExpired == true)
                         ElevatedButton(
                           onPressed: _nextLocation,
                           child: Text('Next'),
                         ),
-                      Padding(
-                        padding: EdgeInsets.all(
-                            MediaQuery.of(context).size.height * 0.001),
-                        child: Text(
-                          _locationSubmitted
-                              ? 'Location Submitted'
-                              : 'Location Not Submitted',
-                          style: TextStyle(
-                              fontSize:
-                                  MediaQuery.of(context).size.height * 0.020,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
                     ],
                   ),
                 ),
