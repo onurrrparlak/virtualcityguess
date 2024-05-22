@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:virtualcityguess/main.dart';
 import 'package:virtualcityguess/services/room.dart';
+import 'package:virtualcityguess/views/host_lobby_screen.dart';
+import 'package:virtualcityguess/views/player_lobby_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,15 +16,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _createRoom() async {
     if (_playerName.isNotEmpty) {
-      String roomId = await _firestoreService.createRoom();
+      String roomId =
+          await _firestoreService.createRoom(_playerName); // Pass host's name
       await _firestoreService.joinRoom(roomId, _playerName);
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MapScreen(
+          builder: (context) => HostLobbyScreen(
             roomId: roomId,
-            playerName: _playerName,
-            isHost: true,
           ),
         ),
       );
@@ -33,13 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_roomId.isNotEmpty && _playerName.isNotEmpty) {
       try {
         await _firestoreService.joinRoom(_roomId, _playerName);
-        Navigator.push(
+        List<String> joinedPlayers =
+            await _firestoreService.getJoinedPlayers(_roomId);
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MapScreen(
+            builder: (context) => PlayerLobbyScreen(
               roomId: _roomId,
-              playerName: _playerName,
-              isHost: false,
             ),
           ),
         );

@@ -5,15 +5,34 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String> createRoom() async {
-    String roomId = _generateRoomId();
-    await _firestore.collection('rooms').doc(roomId).set({
-      'players': {},
-      'currentTargetIndex': 0,
-      'gameStarted': false,
-      'submittedPlayers': {}, // Initialize submittedPlayers
+ Future<String> createRoom(String hostName) async {
+  String roomId = _generateRoomId();
+  await _firestore.collection('rooms').doc(roomId).set({
+    'host': hostName, // Include the name of the host
+    'players': {
+      hostName: 0 // Initialize host's score with 0
+    },
+    'currentTargetIndex': 0,
+    'gameStarted': false,
+    'submittedPlayers': {}, // Initialize submittedPlayers
+  });
+  return roomId;
+}
+
+
+ Future<void> kickPlayer(String roomId, String playerName) async {
+    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+    await roomRef.update({
+      'players.$playerName': FieldValue.delete(), // Remove player from the list
     });
-    return roomId;
+  }
+
+  Future<void> banPlayer(String roomId, String playerName) async {
+    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+    await roomRef.update({
+      'bannedPlayers.$playerName': true, // Add player to the banned list
+      'players.$playerName': FieldValue.delete(), // Remove player from the list
+    });
   }
 
   Future<void> joinRoom(String roomId, String playerName) async {
@@ -59,6 +78,18 @@ class FirestoreService {
       'gameStarted': true,
       'submittedPlayers': {}, // Reset submittedPlayers when the game starts
     });
+  }
+
+  Future<List<String>> getJoinedPlayers(String roomId) async {
+    DocumentSnapshot roomSnapshot =
+        await _firestore.collection('rooms').doc(roomId).get();
+
+    if (!roomSnapshot.exists) {
+      throw Exception('Room does not exist');
+    }
+
+    Map<String, dynamic> players = Map<String, dynamic>.from(roomSnapshot['players']);
+    return players.keys.toList();
   }
 
   // Add a new function to update player submission status
