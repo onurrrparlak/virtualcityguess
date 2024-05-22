@@ -34,8 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_roomId.isNotEmpty && _playerName.isNotEmpty) {
       try {
         await _firestoreService.joinRoom(_roomId, _playerName);
-        List<String> joinedPlayers =
-            await _firestoreService.getJoinedPlayers(_roomId);
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -44,27 +43,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
-      } on Exception catch (e) {
-        if (e.toString() == 'Exception: Room does not exist') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Room does not exist'),
-            ),
-          );
-        } else if (e.toString() ==
-            'Exception: Game has already started, you cannot join.') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Game has already started, you cannot join.'),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('An error occurred'),
-            ),
-          );
-        }
+      } catch (e) {
+        // Handle the exception here
+        print('Error joining room: $e');
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('${e.toString().replaceFirst('Exception: ', '')}'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
       }
     }
   }

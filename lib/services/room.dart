@@ -5,22 +5,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
- Future<String> createRoom(String hostName) async {
-  String roomId = _generateRoomId();
-  await _firestore.collection('rooms').doc(roomId).set({
-    'host': hostName, // Include the name of the host
-    'players': {
-      hostName: 0 // Initialize host's score with 0
-    },
-    'currentTargetIndex': 0,
-    'gameStarted': false,
-    'submittedPlayers': {}, // Initialize submittedPlayers
-  });
-  return roomId;
-}
+  Future<String> createRoom(String hostName) async {
+    String roomId = _generateRoomId();
+    await _firestore.collection('rooms').doc(roomId).set({
+      'host': hostName, // Include the name of the host
+      'players': {
+        hostName: 0 // Initialize host's score with 0
+      },
+      'currentTargetIndex': 0,
+      'gameStarted': false,
+      'submittedPlayers': {}, // Initialize submittedPlayers
+    });
+    return roomId;
+  }
 
-
- Future<void> kickPlayer(String roomId, String playerName) async {
+  Future<void> kickPlayer(String roomId, String playerName) async {
     DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
     await roomRef.update({
       'players.$playerName': FieldValue.delete(), // Remove player from the list
@@ -46,6 +45,12 @@ class FirestoreService {
     bool gameStarted = roomSnapshot['gameStarted'];
     if (gameStarted) {
       throw Exception('Game has already started, you cannot join.');
+    }
+
+    Map<String, dynamic> bannedPlayers =
+        Map<String, dynamic>.from(roomSnapshot['bannedPlayers']);
+    if (bannedPlayers.containsKey(playerName)) {
+      throw Exception('You are banned from joining this room');
     }
 
     Map<String, int> players = Map<String, int>.from(roomSnapshot['players']);
@@ -88,30 +93,34 @@ class FirestoreService {
       throw Exception('Room does not exist');
     }
 
-    Map<String, dynamic> players = Map<String, dynamic>.from(roomSnapshot['players']);
+    Map<String, dynamic> players =
+        Map<String, dynamic>.from(roomSnapshot['players']);
     return players.keys.toList();
   }
 
   // Add a new function to update player submission status
-Future<void> updatePlayerSubmissionStatus(String roomId, String playerName, bool submitted) async {
-  DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
-  await roomRef.update({
-    'submittedPlayers.$playerName': submitted,
-  });
-}
+  Future<void> updatePlayerSubmissionStatus(
+      String roomId, String playerName, bool submitted) async {
+    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+    await roomRef.update({
+      'submittedPlayers.$playerName': submitted,
+    });
+  }
 
 // Add a new function to check if all players have submitted their locations
-Future<bool> checkAllPlayersSubmitted(String roomId) async {
-  DocumentSnapshot roomSnapshot = await _firestore.collection('rooms').doc(roomId).get();
-  if (!roomSnapshot.exists) {
-    throw Exception('Room does not exist');
+  Future<bool> checkAllPlayersSubmitted(String roomId) async {
+    DocumentSnapshot roomSnapshot =
+        await _firestore.collection('rooms').doc(roomId).get();
+    if (!roomSnapshot.exists) {
+      throw Exception('Room does not exist');
+    }
+    Map<String, dynamic> submittedPlayers =
+        Map<String, dynamic>.from(roomSnapshot['submittedPlayers']);
+    if (submittedPlayers.length == 0) {
+      return false; // No players have submitted
+    }
+    return submittedPlayers.values.every((submitted) => submitted == true);
   }
-  Map<String, dynamic> submittedPlayers = Map<String, dynamic>.from(roomSnapshot['submittedPlayers']);
-  if (submittedPlayers.length == 0) {
-    return false; // No players have submitted
-  }
-  return submittedPlayers.values.every((submitted) => submitted == true);
-}
 
   Stream<DocumentSnapshot> getRoomStream(String roomId) {
     return _firestore.collection('rooms').doc(roomId).snapshots();
