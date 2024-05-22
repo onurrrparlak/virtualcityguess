@@ -5,8 +5,9 @@ import 'package:virtualcityguess/services/room.dart';
 
 class PlayerLobbyScreen extends StatelessWidget {
   final String roomId;
+  final String currentPlayerName;
 
-  PlayerLobbyScreen({required this.roomId});
+  PlayerLobbyScreen({required this.roomId, required this.currentPlayerName});
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +43,7 @@ class PlayerLobbyScreen extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: screenHeight * 0.03),
-            ElevatedButton(
-              onPressed: () {
-                // Logic to start the game
-              },
-              child: Text('Start Game'),
-            ),
+           
             SizedBox(height: screenHeight * 0.03),
             Text(
               'Joined Players:',
@@ -93,62 +88,15 @@ class PlayerLobbyScreen extends StatelessWidget {
                                       style: TextStyle(color: Colors.green)),
                                 ],
                               )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      String playerName = joinedPlayers[index];
-                                      FirestoreService()
-                                          .kickPlayer(roomId, playerName);
-                                    },
-                                    child: SizedBox(
-                                      width: screenWidth * 0.15,
-                                      height: screenHeight * 0.05,
-                                      child: Center(child: Text('Kick')),
-                                    ),
-                                  ),
-                                  SizedBox(width: screenWidth * 0.02),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      // Logic to ban player
-                                      String playerName = joinedPlayers[index];
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: Text('Ban Player'),
-                                            content: Text(
-                                                'Are you sure you want to ban $playerName?'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context)
-                                                      .pop(); // Close the dialog
-                                                },
-                                                child: Text('Cancel'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  FirestoreService().banPlayer(
-                                                      roomId, playerName);
-                                                  Navigator.of(context)
-                                                      .pop(); // Close the dialog
-                                                },
-                                                child: Text('Ban'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                    child: SizedBox(
-                                      width: screenWidth * 0.15,
-                                      height: screenHeight * 0.05,
-                                      child: Center(child: Text('Ban')),
-                                    ),
-                                  ),
-                                ],
+                            : Text(
+                                playerName == currentPlayerName
+                                    ? 'You'
+                                    : 'Player',
+                                style: TextStyle(
+                                  color: playerName == currentPlayerName
+                                      ? Colors.blue
+                                      : null,
+                                ),
                               ),
                       );
                     },
@@ -156,6 +104,7 @@ class PlayerLobbyScreen extends StatelessWidget {
                 },
               ),
             ),
+            Center(child: Text('Waiting for host to start the game')),
           ],
         ),
       ),

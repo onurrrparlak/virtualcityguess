@@ -54,6 +54,11 @@ class FirestoreService {
     }
 
     Map<String, int> players = Map<String, int>.from(roomSnapshot['players']);
+    if (players.length >= 16) {
+      throw Exception('The room is already full, you cannot join.');
+    }
+
+   
     if (!players.containsKey(playerName)) {
       players[playerName] = 0; // Start the player with 0 points
       await roomRef.update({'players': players});

@@ -40,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
           MaterialPageRoute(
             builder: (context) => PlayerLobbyScreen(
               roomId: _roomId,
+              currentPlayerName: _playerName,
             ),
           ),
         );
