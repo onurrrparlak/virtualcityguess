@@ -1,13 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:virtualcityguess/services/game.dart';
 import 'package:virtualcityguess/services/room.dart';
 
-class PlayerLobbyScreen extends StatelessWidget {
+class PlayerLobbyScreen extends StatefulWidget {
   final String roomId;
   final String currentPlayerName;
 
   PlayerLobbyScreen({required this.roomId, required this.currentPlayerName});
+
+  @override
+  State<PlayerLobbyScreen> createState() => _PlayerLobbyScreenState();
+}
+
+class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
+  int countdown = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +38,14 @@ class PlayerLobbyScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: SelectableText(
-                    'Room ID: $roomId',
+                    'Room ID: ${widget.roomId}',
                     style: TextStyle(fontSize: screenWidth * 0.04),
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.copy),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: roomId));
+                    Clipboard.setData(ClipboardData(text: widget.roomId));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Room ID copied to clipboard')),
                     );
@@ -43,7 +53,6 @@ class PlayerLobbyScreen extends StatelessWidget {
                 ),
               ],
             ),
-           
             SizedBox(height: screenHeight * 0.03),
             Text(
               'Joined Players:',
@@ -52,7 +61,7 @@ class PlayerLobbyScreen extends StatelessWidget {
             SizedBox(height: screenHeight * 0.015),
             Expanded(
               child: StreamBuilder<DocumentSnapshot>(
-                stream: FirestoreService().getRoomStream(roomId),
+                stream: FirestoreService().getRoomStream(widget.roomId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(child: CircularProgressIndicator());
@@ -64,47 +73,79 @@ class PlayerLobbyScreen extends StatelessWidget {
                       roomData['players'].keys.toList();
 
                   String hostName = roomData['host'];
+                  bool gameStarted = roomData['gameStarted'];
+                  if (gameStarted) {
+                     Future.delayed(Duration(seconds: 5), () {
+                      WidgetsBinding.instance!.addPostFrameCallback((_) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GameScreen(
+                              roomId: widget.roomId,
+                              playerName: widget.currentPlayerName,
+                              isHost: false,
+                            ),
+                          ),
+                        );
+                      });
+                    });
+                  }
 
                   if (joinedPlayers.contains(hostName)) {
                     joinedPlayers.remove(hostName);
                     joinedPlayers.insert(0, hostName);
                   }
 
-                  return ListView.builder(
-                    itemCount: joinedPlayers.length,
-                    itemBuilder: (context, index) {
-                      String playerName = joinedPlayers[index];
-                      bool isHost = playerName == hostName;
+                  return Column(
+                    children: [
+                      Expanded(
+                        flex: 7,
+                        child: ListView.builder(
+                          itemCount: joinedPlayers.length,
+                          itemBuilder: (context, index) {
+                            String playerName = joinedPlayers[index];
+                            bool isHost = playerName == hostName;
 
-                      return ListTile(
-                        title: Text(playerName),
-                        trailing: isHost
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.circle, color: Colors.green),
-                                  SizedBox(width: 5),
-                                  Text('(Host)',
-                                      style: TextStyle(color: Colors.green)),
-                                ],
-                              )
-                            : Text(
-                                playerName == currentPlayerName
-                                    ? 'You'
-                                    : 'Player',
-                                style: TextStyle(
-                                  color: playerName == currentPlayerName
-                                      ? Colors.blue
-                                      : null,
-                                ),
-                              ),
-                      );
-                    },
+                            return ListTile(
+                              title: Text(playerName),
+                              trailing: isHost
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.circle, color: Colors.green),
+                                        SizedBox(width: 5),
+                                        Text('(Host)',
+                                            style:
+                                                TextStyle(color: Colors.green)),
+                                      ],
+                                    )
+                                  : Text(
+                                      playerName == widget.currentPlayerName
+                                          ? 'You'
+                                          : 'Player',
+                                      style: TextStyle(
+                                        color: playerName == widget.currentPlayerName
+                                            ? Colors.blue
+                                            : null,
+                                      ),
+                                    ),
+                            );
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Center(
+                          child: gameStarted
+                              ? Text('Game starting..')
+                              : Text('Waiting for host to start the game'),
+                        ),
+                      )
+                    ],
                   );
                 },
               ),
             ),
-            Center(child: Text('Waiting for host to start the game')),
           ],
         ),
       ),

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:virtualcityguess/services/room.dart';
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/services.dart';
+import 'package:virtualcityguess/services/game.dart';
 import 'package:virtualcityguess/services/room.dart';
 
 class HostLobbyScreen extends StatelessWidget {
@@ -12,15 +9,31 @@ class HostLobbyScreen extends StatelessWidget {
 
   HostLobbyScreen({required this.roomId});
 
+  void _startGame(BuildContext context) async {
+  // Call the startGame function from FirestoreService
+  await FirestoreService().startGame(roomId);
+  
+  // Navigate to the GameScreen
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => GameScreen(
+        roomId: roomId,
+        playerName: 'Host', // Assuming 'Host' is the host's player name
+        isHost: true,
+      ),
+    ),
+  );
+}
+
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Host Lobby'),
-      ),
+     
       body: Container(
         constraints: BoxConstraints.expand(),
         padding: EdgeInsets.all(screenWidth * 0.05),
@@ -159,7 +172,7 @@ class HostLobbyScreen extends StatelessWidget {
                         flex: 3, // 30% of the available space
                         child: ElevatedButton(
                           onPressed: () {
-                            // Logic to start the game
+                           _startGame(context);
                           },
                           child: Text('Start Game'),
                         ),

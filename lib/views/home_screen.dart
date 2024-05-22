@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:virtualcityguess/main.dart';
 import 'package:virtualcityguess/services/room.dart';
 import 'package:virtualcityguess/views/host_lobby_screen.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';

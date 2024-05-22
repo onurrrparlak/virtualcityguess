@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+import 'package:virtualcityguess/services/game.dart';
+import 'package:virtualcityguess/services/timer_service.dart';
 import 'firebase_options.dart';
 import 'package:virtualcityguess/services/room.dart';
 import 'package:virtualcityguess/views/home_screen.dart';
@@ -11,12 +14,18 @@ import 'package:virtualcityguess/widgets/videoplayer.dart';
 import 'dart:async';
 
 void main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Ensure Flutter binding is initialized
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter binding is initialized
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TimerService()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -28,7 +37,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: true,
       title: 'Flutter Map Guessing Game',
       home: SafeArea(child: HomeScreen()),
     );
