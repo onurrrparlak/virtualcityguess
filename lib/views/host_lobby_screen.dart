@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:virtualcityguess/services/room.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:virtualcityguess/services/room.dart';
 
 class HostLobbyScreen extends StatelessWidget {
   final String roomId;
@@ -43,13 +47,6 @@ class HostLobbyScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: screenHeight * 0.03),
-            ElevatedButton(
-              onPressed: () {
-                // Logic to start the game
-              },
-              child: Text('Start Game'),
-            ),
-            SizedBox(height: screenHeight * 0.03),
             Text(
               'Joined Players:',
               style: TextStyle(fontSize: screenWidth * 0.04),
@@ -75,83 +72,99 @@ class HostLobbyScreen extends StatelessWidget {
                     joinedPlayers.insert(0, hostName);
                   }
 
-                  return ListView.builder(
-                    itemCount: joinedPlayers.length,
-                    itemBuilder: (context, index) {
-                      String playerName = joinedPlayers[index];
-                      bool isHost = playerName == hostName;
+                  return Column(
+                    children: [
+                      Expanded(
+                        flex: 7, // 70% of the available space
+                        child: ListView.builder(
+                          itemCount: joinedPlayers.length,
+                          itemBuilder: (context, index) {
+                            String playerName = joinedPlayers[index];
+                            bool isHost = playerName == hostName;
 
-                      return ListTile(
-                        title: Text(playerName),
-                        trailing: isHost
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.circle, color: Colors.green),
-                                  SizedBox(width: 5),
-                                  Text('(Host)',
-                                      style: TextStyle(color: Colors.green)),
-                                ],
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      String playerName = joinedPlayers[index];
-                                      FirestoreService()
-                                          .kickPlayer(roomId, playerName);
-                                    },
-                                    child: SizedBox(
-                                      width: screenWidth * 0.15,
-                                      height: screenHeight * 0.05,
-                                      child: Center(child: Text('Kick')),
+                            return ListTile(
+                              title: Text(playerName),
+                              trailing: isHost
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.circle, color: Colors.green),
+                                        SizedBox(width: 5),
+                                        Text('(Host)',
+                                            style: TextStyle(color: Colors.green)),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            String playerName = joinedPlayers[index];
+                                            FirestoreService()
+                                                .kickPlayer(roomId, playerName);
+                                          },
+                                          child: SizedBox(
+                                            width: screenWidth * 0.15,
+                                            height: screenHeight * 0.05,
+                                            child: Center(child: Text('Kick')),
+                                          ),
+                                        ),
+                                        SizedBox(width: screenWidth * 0.02),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            // Logic to ban player
+                                            String playerName = joinedPlayers[index];
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text('Ban Player'),
+                                                  content: Text(
+                                                      'Are you sure you want to ban $playerName?'),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop(); // Close the dialog
+                                                      },
+                                                      child: Text('Cancel'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        FirestoreService().banPlayer(
+                                                            roomId, playerName);
+                                                        Navigator.of(context)
+                                                            .pop(); // Close the dialog
+                                                      },
+                                                      child: Text('Ban'),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+                                          child: SizedBox(
+                                            width: screenWidth * 0.15,
+                                            height: screenHeight * 0.05,
+                                            child: Center(child: Text('Ban')),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  SizedBox(width: screenWidth * 0.02),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      // Logic to ban player
-                                      String playerName = joinedPlayers[index];
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: Text('Ban Player'),
-                                            content: Text(
-                                                'Are you sure you want to ban $playerName?'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context)
-                                                      .pop(); // Close the dialog
-                                                },
-                                                child: Text('Cancel'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  FirestoreService().banPlayer(
-                                                      roomId, playerName);
-                                                  Navigator.of(context)
-                                                      .pop(); // Close the dialog
-                                                },
-                                                child: Text('Ban'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                    child: SizedBox(
-                                      width: screenWidth * 0.15,
-                                      height: screenHeight * 0.05,
-                                      child: Center(child: Text('Ban')),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      );
-                    },
+                            );
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3, // 30% of the available space
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Logic to start the game
+                          },
+                          child: Text('Start Game'),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),

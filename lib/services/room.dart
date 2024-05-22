@@ -47,9 +47,12 @@ class FirestoreService {
       throw Exception('Game has already started, you cannot join.');
     }
 
-    Map<String, dynamic> bannedPlayers =
-        Map<String, dynamic>.from(roomSnapshot['bannedPlayers']);
-    if (bannedPlayers.containsKey(playerName)) {
+    Map<String, dynamic> bannedPlayers = Map<String, dynamic>.from(
+      (roomSnapshot.data() as Map<String, dynamic>? ?? {})['bannedPlayers'] ??
+          {},
+    );
+
+    if (bannedPlayers.isNotEmpty && bannedPlayers.containsKey(playerName)) {
       throw Exception('You are banned from joining this room');
     }
 
@@ -58,7 +61,6 @@ class FirestoreService {
       throw Exception('The room is already full, you cannot join.');
     }
 
-   
     if (!players.containsKey(playerName)) {
       players[playerName] = 0; // Start the player with 0 points
       await roomRef.update({'players': players});
