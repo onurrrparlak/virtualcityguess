@@ -1,9 +1,11 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:virtualcityguess/models/locations.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
 
   Future<String> createRoom(String hostName) async {
     String roomId = _generateRoomId();
@@ -12,7 +14,7 @@ class FirestoreService {
       'players': {
         hostName: 0 // Initialize host's score with 0
       },
-      'currentTargetIndex': 0,
+      'currentTarget': 0,
       'gameStarted': false,
       'submittedPlayers': {}, // Initialize submittedPlayers
     });
@@ -83,14 +85,31 @@ class FirestoreService {
     });
   }
 
-  // Update the startGame function to reset submittedPlayers
-  Future<void> startGame(String roomId) async {
-    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
-    await roomRef.update({
-      'gameStarted': true,
-      'submittedPlayers': {}, // Reset submittedPlayers when the game starts
-    });
+  
+
+  Future<String?> fetchCurrentTarget(String roomId) async {
+  try {
+    // Get room document reference
+    DocumentReference roomRef = FirebaseFirestore.instance.collection('rooms').doc(roomId);
+    
+    // Get room snapshot
+    DocumentSnapshot roomSnapshot = await roomRef.get();
+    
+    // Check if room exists
+    if (!roomSnapshot.exists) {
+      throw Exception('Room does not exist');
+    }
+    
+    // Get current target from room snapshot
+    String? currentTarget = roomSnapshot['currentTarget'];
+    
+    return currentTarget;
+  } catch (e) {
+    print("An error occurred while fetching current target: $e");
+    return null; // Return null if there's any error
   }
+}
+
 
   Future<List<String>> getJoinedPlayers(String roomId) async {
     DocumentSnapshot roomSnapshot =

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:virtualcityguess/services/game.dart';
-import 'package:virtualcityguess/services/room.dart';
+import 'package:virtualcityguess/services/game_service.dart';
+import 'package:virtualcityguess/views/game_screen.dart';
+import 'package:virtualcityguess/services/firestore_service.dart';
+
+
 
 class HostLobbyScreen extends StatelessWidget {
   final String roomId;
@@ -10,8 +13,8 @@ class HostLobbyScreen extends StatelessWidget {
   HostLobbyScreen({required this.roomId});
 
   void _startGame(BuildContext context) async {
-  // Call the startGame function from FirestoreService
-  await FirestoreService().startGame(roomId);
+  
+  await GameService().startGame(roomId);
   
   // Navigate to the GameScreen
   Navigator.pushReplacement(

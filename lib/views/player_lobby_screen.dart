@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:virtualcityguess/services/game.dart';
-import 'package:virtualcityguess/services/room.dart';
+import 'package:virtualcityguess/views/game_screen.dart';
+import 'package:virtualcityguess/services/firestore_service.dart';
 
 class PlayerLobbyScreen extends StatefulWidget {
   final String roomId;
@@ -17,7 +17,7 @@ class PlayerLobbyScreen extends StatefulWidget {
 }
 
 class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
-  int countdown = 5;
+  
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +75,7 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                   String hostName = roomData['host'];
                   bool gameStarted = roomData['gameStarted'];
                   if (gameStarted) {
-                     Future.delayed(Duration(seconds: 5), () {
+                     Future.delayed(Duration(seconds: 2), () {
                       WidgetsBinding.instance!.addPostFrameCallback((_) {
                         Navigator.pushReplacement(
                           context,

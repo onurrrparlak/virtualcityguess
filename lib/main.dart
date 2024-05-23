@@ -5,10 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:virtualcityguess/services/game.dart';
+import 'package:virtualcityguess/services/game_service.dart';
+import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 import 'firebase_options.dart';
-import 'package:virtualcityguess/services/room.dart';
+import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/home_screen.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
 import 'dart:async';
@@ -22,6 +23,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => TimerService()),
+        ChangeNotifierProvider(create: (_) => GameService()),
       ],
       child: MyApp(),
     ),
@@ -37,7 +39,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Map Guessing Game',
       home: SafeArea(child: HomeScreen()),
     );
@@ -154,9 +156,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
   }
 
-  void _startGame() async {
-    await _firestoreService.startGame(widget.roomId);
-  }
+  
 
   void _submitLocation(StateSetter updateState) async {
     final distance = Distance().as(
@@ -538,7 +538,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       ),
                       if (_isHost && !_gameStarted)
                         ElevatedButton(
-                          onPressed: _startGame,
+                          onPressed: (){
+                            
+                          },
                           child: Text('Start Game'),
                         ),
                       if (_gameStarted) // Show game components when the game has started

@@ -1,14 +1,28 @@
-import 'package:latlong2/latlong.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-final List<LatLng> _locations = [
-    LatLng(51.5074, -0.1278), // London
-    LatLng(41.0082, 28.9784), // Istanbul
-    LatLng(40.7128, -74.0060), // New York
-    LatLng(48.8566, 2.3522), // Paris
-    LatLng(34.0522, -118.2437), // Los Angeles
-    LatLng(52.3676, 4.9041), // Amsterdam
-    LatLng(35.6895, 139.6917), // Tokyo
-    LatLng(59.3293, 18.0686), // Stockholm
-    LatLng(25.2048, 55.2708), // Dubai
-    LatLng(55.7558, 37.6173) // Moscow
-  ];
+class LocationModel {
+  final String name;
+  final double latitude;
+  final double longitude;
+  final String videoUrl;
+
+  LocationModel({
+    required this.name,
+    required this.latitude,
+    required this.longitude,
+    required this.videoUrl,
+  });
+
+  factory LocationModel.fromDocumentSnapshot(DocumentSnapshot snapshot) {
+    Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+    return LocationModel(
+      name: data['name'],
+      latitude: data['latitude'],
+      longitude: data['longitude'],
+      videoUrl: data['videoUrl'],
+    );
+  }
+}
+
+

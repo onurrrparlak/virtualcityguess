@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 
 class GameScreen extends StatefulWidget {
@@ -8,20 +9,28 @@ class GameScreen extends StatefulWidget {
   final bool isHost;
 
   const GameScreen({Key? key, required this.roomId, required this.playerName, required this.isHost}) : super(key: key);
-  
+
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
   @override
-  Widget build(BuildContext context) {
-    final timerService = Provider.of<TimerService>(context);
+  void initState() {
+    super.initState();
 
-    // Start the timer when the widget is built
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
+    final gameService = Provider.of<GameService>(context, listen: false);
+    gameService.listenToRoomUpdates(widget.roomId);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final timerService = Provider.of<TimerService>(context, listen: false);
       timerService.startTimer();
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+   
 
     return Scaffold(
       body: Center(
@@ -40,11 +49,11 @@ class _GameScreenState extends State<GameScreen> {
               'Is Host: ${widget.isHost ? 'Yes' : 'No'}',
               style: TextStyle(fontSize: 20),
             ),
-            SizedBox(height: 20), // Add some spacing between the texts and the timer
+            SizedBox(height: 20),
             Consumer<TimerService>(
               builder: (context, timerService, child) {
                 if (timerService.timerExpired) {
-                  WidgetsBinding.instance!.addPostFrameCallback((_) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Time expired')),
                     );
@@ -52,6 +61,18 @@ class _GameScreenState extends State<GameScreen> {
                 }
                 return Text(
                   'Time Remaining: ${timerService.timerDuration}',
+                  style: TextStyle(fontSize: 24),
+                );
+              },
+            ),
+            SizedBox(height: 20),
+            Consumer<GameService>(
+              builder: (context, gameService, child) {
+                if (gameService.currentTarget == null) {
+                  return CircularProgressIndicator();
+                }
+                return Text(
+                  'Current Target: ${gameService.currentTarget}',
                   style: TextStyle(fontSize: 24),
                 );
               },
