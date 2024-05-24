@@ -26,7 +26,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.videoUrl != widget.videoUrl) {
-      
       _initializeVideoPlayer();
     }
   }
@@ -46,11 +45,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             materialProgressColors: ChewieProgressColors(
               playedColor: Colors.red,
               handleColor: Colors.red,
-              backgroundColor: Colors.grey,
+              backgroundColor: Colors.white,
               bufferedColor: Colors.lightGreen,
             ),
             placeholder: Container(
-              color: Colors.grey,
+              color: Colors.white,
             ),
             autoInitialize: true,
             fullScreenByDefault: _isFullScreen,
@@ -78,12 +77,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-        ? Chewie(controller: _chewieController!)
-        : Center(
-            child: CircularProgressIndicator(),
-          );
-  }
+  @override
+Widget build(BuildContext context) {
+  return _chewieController != null &&
+      _chewieController!.videoPlayerController.value.isInitialized
+      ? AspectRatio(
+          aspectRatio: _chewieController!.videoPlayerController.value.aspectRatio,
+          child: Chewie(controller: _chewieController!),
+        )
+      : Center(
+          child: CircularProgressIndicator(),
+        );
 }
 
+}

@@ -9,8 +9,9 @@ import 'package:virtualcityguess/services/firestore_service.dart';
 
 class HostLobbyScreen extends StatelessWidget {
   final String roomId;
+  final String playerName;
 
-  HostLobbyScreen({required this.roomId});
+  HostLobbyScreen({required this.roomId, required this.playerName});
 
   void _startGame(BuildContext context) async {
   
@@ -22,7 +23,7 @@ class HostLobbyScreen extends StatelessWidget {
     MaterialPageRoute(
       builder: (context) => GameScreen(
         roomId: roomId,
-        playerName: 'Host', // Assuming 'Host' is the host's player name
+        playerName: playerName, // Assuming 'Host' is the host's player name
         isHost: true,
       ),
     ),

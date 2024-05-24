@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class TimerService extends ChangeNotifier {
-  int _timerDuration = 10;
+  int _timerDuration = 30;
   Timer? _timer;
   bool _timerExpired = false;
 

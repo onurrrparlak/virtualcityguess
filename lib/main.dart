@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
+import 'package:virtualcityguess/widgets/custom_dialog_sheet.dart';
 import 'firebase_options.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/home_screen.dart';
@@ -24,6 +25,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => TimerService()),
         ChangeNotifierProvider(create: (_) => GameService()),
+         ChangeNotifierProvider(create: (_) => LocationNotifier()),
       ],
       child: MyApp(),
     ),
