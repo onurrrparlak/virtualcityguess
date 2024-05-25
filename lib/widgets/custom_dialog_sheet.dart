@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 
@@ -57,6 +58,7 @@ class LocationNotifier extends ChangeNotifier {
     notifyListeners();
   }
 }
+
 class CustomDialogSheet extends StatefulWidget {
   final String roomId;
   final String playerName;
@@ -80,14 +82,16 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
     final gameService = Provider.of<GameService>(context, listen: false);
     gameService.fetchCurrentTargetLatLng().then((latLng) {
       if (latLng != null) {
-        Provider.of<LocationNotifier>(context, listen: false).setCurrentTargetLocation(latLng);
+        Provider.of<LocationNotifier>(context, listen: false)
+            .setCurrentTargetLocation(latLng);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final locationNotifier = Provider.of<LocationNotifier>(context, listen: false);
+    final locationNotifier =
+        Provider.of<LocationNotifier>(context, listen: false);
     print("build çalıştı");
     buildNumber++;
     print(buildNumber);
@@ -128,16 +132,21 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                               center: !timerExpired
                                   ? locationNotifier.currentLocation
                                   : locationNotifier.currentTargetLocation,
-                              interactiveFlags: locationNotifier.locationSubmitted || timerExpired
-                                  ? InteractiveFlag.none
-                                  : InteractiveFlag.all,
-                              zoom: timerExpired && !locationNotifier.locationSubmitted
-                                  ? 10.0
+                              interactiveFlags:
+                                  locationNotifier.locationSubmitted ||
+                                          timerExpired
+                                      ? InteractiveFlag.none
+                                      : InteractiveFlag.all,
+                              zoom: timerExpired &&
+                                      !locationNotifier.locationSubmitted
+                                  ? 6.0
                                   : 1.0,
                               onTap: (tapPosition, point) {
-                                if (!locationNotifier.locationSubmitted && !timerExpired) {
+                                if (!locationNotifier.locationSubmitted &&
+                                    !timerExpired) {
                                   locationNotifier.setCurrentLocation(point);
-                                  locationNotifier.setShowLineAndTargetMarker(false);
+                                  locationNotifier
+                                      .setShowLineAndTargetMarker(false);
                                 }
                               },
                               onPositionChanged: (position, hasGesture) {
@@ -146,12 +155,14 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                             ),
                             children: [
                               TileLayer(
-                                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                 userAgentPackageName: 'com.example.app',
                               ),
                               MarkerLayer(
                                 markers: [
-                                  if (!timerExpired || locationNotifier.locationSubmitted)
+                                  if (!timerExpired ||
+                                      locationNotifier.locationSubmitted)
                                     Marker(
                                       point: locationNotifier.currentLocation,
                                       width: 80,
@@ -162,10 +173,13 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                                         size: 30,
                                       ),
                                     ),
-                                  if (locationNotifier.currentTargetLocation != null &&
-                                      (locationNotifier.locationSubmitted || timerExpired))
+                                  if (locationNotifier.currentTargetLocation !=
+                                          null &&
+                                      (locationNotifier.locationSubmitted ||
+                                          timerExpired))
                                     Marker(
-                                      point: locationNotifier.currentTargetLocation!,
+                                      point: locationNotifier
+                                          .currentTargetLocation!,
                                       width: 80,
                                       height: 80,
                                       child: Icon(
@@ -177,7 +191,8 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                                 ],
                               ),
                               if (locationNotifier.locationSubmitted &&
-                                  locationNotifier.currentTargetLocation != null)
+                                  locationNotifier.currentTargetLocation !=
+                                      null)
                                 PolylineLayer(
                                   polylines: [
                                     Polyline(
@@ -196,67 +211,122 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                       ),
                     ),
                     if (!locationNotifier.locationSubmitted)
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: 20.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (!locationNotifier.locationSubmitted && !timerExpired) {
-                              final gameService = Provider.of<GameService>(context, listen: false);
-                              locationNotifier.setLocationSubmitted(true);
-                              gameService.userSubmitLocation(
-                                widget.roomId,
-                                widget.playerName,
-                                locationNotifier.currentLocation,
-                              );
+                      Consumer<LocationNotifier>(
+                        builder: (context, locationNotifier, _) {
+                          return locationNotifier.locationSubmitted
+                              ? SizedBox() // Return an empty SizedBox if locationSubmitted is true
+                              : Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      if (!locationNotifier.locationSubmitted &&
+                                          !timerExpired) {
+                                        try {
+                                          final gameService =
+                                              Provider.of<GameService>(context,
+                                                  listen: false);
+                                          await gameService.userSubmitLocation(
+                                            widget.roomId,
+                                            widget.playerName,
+                                            locationNotifier.currentLocation,
+                                          );
 
-                              if (locationNotifier.currentTargetLocation != null) {
-                                LatLngBounds bounds = LatLngBounds.fromPoints([
-                                  locationNotifier.currentLocation,
-                                  locationNotifier.currentTargetLocation!,
-                                ]);
+                                          if (locationNotifier
+                                                  .currentTargetLocation !=
+                                              null) {
+                                            LatLngBounds bounds =
+                                                LatLngBounds.fromPoints([
+                                              locationNotifier.currentLocation,
+                                              locationNotifier
+                                                  .currentTargetLocation!,
+                                            ]);
 
-                                locationNotifier.updateMapBounds(bounds); // Update map bounds
-                                _mapController.fitBounds(
-                                  bounds,
-                                  options: FitBoundsOptions(
-                                    padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.045),
+                                            locationNotifier.updateMapBounds(
+                                                bounds); // Update map bounds
+                                            _mapController.fitBounds(
+                                              bounds,
+                                              options: FitBoundsOptions(
+                                                padding: EdgeInsets.all(
+                                                    MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.045),
+                                              ),
+                                            );
+                                          }
+
+                                          final distance = Distance().as(
+                                            LengthUnit.Meter,
+                                            locationNotifier.currentLocation,
+                                            locationNotifier
+                                                .currentTargetLocation!,
+                                          );
+
+                                          double distanceInKm = distance /
+                                              1000; // Convert distance to kilometers
+
+                                          int points;
+
+                                          if (distanceInKm <= 0.5) {
+                                            points = 600;
+                                          } else if (distanceInKm > 0.5 &&
+                                              distanceInKm <= 10) {
+                                            points =
+                                                (500 - (distanceInKm - 0.5) * 8)
+                                                    .round()
+                                                    .clamp(200, 500);
+                                          } else if (distanceInKm > 10 &&
+                                              distanceInKm <= 100) {
+                                            points =
+                                                (400 - (distanceInKm - 10) * 2)
+                                                    .round()
+                                                    .clamp(200, 400);
+                                          } else if (distanceInKm > 100 &&
+                                              distanceInKm <= 500) {
+                                            points = (200 -
+                                                    (distanceInKm - 100) * 0.2)
+                                                .round()
+                                                .clamp(100, 200);
+                                          } else if (distanceInKm > 500 &&
+                                              distanceInKm <= 2000) {
+                                            points = (100 -
+                                                    (distanceInKm - 500) * 0.05)
+                                                .round()
+                                                .clamp(0, 100);
+                                          } else {
+                                            points = 0;
+                                          }
+                                          print(points);
+
+                                          // Update points in Firestore
+                                          final firestoreService =
+                                              Provider.of<FirestoreService>(
+                                                  context,
+                                                  listen: false);
+                                          await firestoreService.updatePoints(
+                                              widget.roomId,
+                                              widget.playerName,
+                                              points);
+
+                                          locationNotifier
+                                              .setLocationSubmitted(true);
+                                          locationNotifier
+                                              .setShowLineAndTargetMarker(true);
+                                        } catch (e) {
+                                          print('Error during onPressed: $e');
+                                        }
+                                      }
+                                    },
+                                    child: Text(
+                                      locationNotifier.locationSubmitted ||
+                                              timerExpired
+                                          ? 'Show Results'
+                                          : 'Submit Location',
+                                    ),
                                   ),
                                 );
-                              }
-
-                              final distance = Distance().as(
-                                LengthUnit.Meter,
-                                locationNotifier.currentLocation,
-                                locationNotifier.currentTargetLocation!,
-                              );
-
-                              double distanceInKm = distance / 1000; // Convert distance to kilometers
-
-                              int points;
-
-                              if (distanceInKm <= 0.5) {
-                                points = 600;
-                              } else if (distanceInKm > 0.5 && distanceInKm <= 10) {
-                                points = (500 - (distanceInKm - 0.5) * 8).round().clamp(200, 500);
-                              } else if (distanceInKm > 10 && distanceInKm <= 100) {
-                                points = (400 - (distanceInKm - 10) * 2).round().clamp(200, 400);
-                              } else if (distanceInKm > 100 && distanceInKm <= 500) {
-                                points = (200 - (distanceInKm - 100) * 0.2).round().clamp(100, 200);
-                              } else if (distanceInKm > 500 && distanceInKm <= 2000) {
-                                points = (100 - (distanceInKm - 500) * 0.05).round().clamp(0, 100);
-                              } else {
-                                points = 0;
-                              }
-
-                              locationNotifier.setLocationSubmitted(true);
-                              locationNotifier.setShowLineAndTargetMarker(true);
-                            }
-                          },
-                          child: Text(
-                            locationNotifier.locationSubmitted || timerExpired ? 'Show Results' : 'Submit Location',
-                          ),
-                        ),
+                        },
                       ),
                   ],
                 ),

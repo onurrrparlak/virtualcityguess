@@ -16,16 +16,18 @@ import 'package:virtualcityguess/widgets/videoplayer.dart';
 import 'dart:async';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter binding is initialized
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensure Flutter binding is initialized
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(
     MultiProvider(
       providers: [
+        Provider<FirestoreService>(create: (_) => FirestoreService()),
         ChangeNotifierProvider(create: (_) => TimerService()),
         ChangeNotifierProvider(create: (_) => GameService()),
-         ChangeNotifierProvider(create: (_) => LocationNotifier()),
+        ChangeNotifierProvider(create: (_) => LocationNotifier()),
       ],
       child: MyApp(),
     ),
@@ -129,12 +131,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   @override
- void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     print(_isHost);
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
       if (_isHost) {
-        
         _firestoreService.deleteRoom(widget.roomId);
       }
     }
@@ -157,8 +159,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       });
     });
   }
-
-  
 
   void _submitLocation(StateSetter updateState) async {
     final distance = Distance().as(
@@ -191,13 +191,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
 
     // Update submittedPlayers in Firestore
-  await _firestoreService.updatePlayerSubmissionStatus(widget.roomId, widget.playerName, true);
+    await _firestoreService.updatePlayerSubmissionStatus(
+        widget.roomId, widget.playerName, true);
 
-  // Check if all players have submitted their locations
-  final allPlayersSubmitted = await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
-  if (allPlayersSubmitted || _timerDuration == 0) {
-    
-  }
+    // Check if all players have submitted their locations
+    final allPlayersSubmitted =
+        await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
+    if (allPlayersSubmitted || _timerDuration == 0) {}
 
     await _firestoreService.updatePoints(
         widget.roomId, widget.playerName, _playerPoint);
@@ -238,61 +238,62 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 
- void _nextLocation() async {
-  // Check if all players have submitted their locations
-  final allPlayersSubmitted = await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
-  
-  if (!allPlayersSubmitted) {
-    // Show a message indicating that all players need to submit their locations
+  void _nextLocation() async {
+    // Check if all players have submitted their locations
+    final allPlayersSubmitted =
+        await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
+
+    if (!allPlayersSubmitted) {
+      // Show a message indicating that all players need to submit their locations
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Not all players have submitted their locations yet.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return; // Exit the function without advancing to the next round
+    }
+
+    // Update submittedPlayers in Firestore to mark the current player as not submitted
+    await _firestoreService.updatePlayerSubmissionStatus(
+        widget.roomId, widget.playerName, false);
+
+    setState(() {
+      // Reset various states
+      _showLineAndTargetMarker = false;
+      _currentTargetIndex = (_currentTargetIndex + 1) % _locations.length;
+      _currentLocation = _initialLocation;
+      _showNextButton = false;
+      _timerExpired = false; // Reset timer expired status
+      _locationSubmitted = false; // Reset location submitted status
+      _timerDuration = 60; // Reset timer duration
+    });
+
+    // Restart the timer
+    startTimer();
+
+    // Show SnackBar indicating the next location guess
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Not all players have submitted their locations yet.'),
+        content: Text('Now guess where the next location is!'),
         duration: Duration(seconds: 3),
       ),
     );
-    return; // Exit the function without advancing to the next round
+    _storedBounds = null;
+
+    // Close the popup if it's open
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
+    // Move map only if the map controller is active
+    if (_showLineAndTargetMarker || _timerExpired) {
+      _mapController.move(
+        _initialLocation,
+        1,
+      );
+    }
   }
-  
-  // Update submittedPlayers in Firestore to mark the current player as not submitted
-  await _firestoreService.updatePlayerSubmissionStatus(widget.roomId, widget.playerName, false);
-  
-  setState(() {
-    // Reset various states
-    _showLineAndTargetMarker = false;
-    _currentTargetIndex = (_currentTargetIndex + 1) % _locations.length;
-    _currentLocation = _initialLocation;
-    _showNextButton = false;
-    _timerExpired = false; // Reset timer expired status
-    _locationSubmitted = false; // Reset location submitted status
-    _timerDuration = 60; // Reset timer duration
-  });
-
-  // Restart the timer
-  startTimer();
-
-  // Show SnackBar indicating the next location guess
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text('Now guess where the next location is!'),
-      duration: Duration(seconds: 3),
-    ),
-  );
-  _storedBounds = null;
-
-  // Close the popup if it's open
-  if (Navigator.of(context).canPop()) {
-    Navigator.of(context).pop();
-  }
-
-  // Move map only if the map controller is active
-  if (_showLineAndTargetMarker || _timerExpired) {
-    _mapController.move(
-      _initialLocation,
-      1,
-    );
-  }
-}
-
 
   void _showSnackBar(String message) {
     // Show SnackBar with the provided message
@@ -516,33 +517,30 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   child: Column(
                     children: [
                       if (!_gameStarted)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                           
-                          SelectableText(
-                            'Room ID: ${widget.roomId}',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.copy),
-                            onPressed: () {
-                              Clipboard.setData(
-                                  ClipboardData(text: widget.roomId));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content:
-                                        Text('Room ID copied to clipboard')),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SelectableText(
+                              'Room ID: ${widget.roomId}',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.copy),
+                              onPressed: () {
+                                Clipboard.setData(
+                                    ClipboardData(text: widget.roomId));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text('Room ID copied to clipboard')),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       if (_isHost && !_gameStarted)
                         ElevatedButton(
-                          onPressed: (){
-                            
-                          },
+                          onPressed: () {},
                           child: Text('Start Game'),
                         ),
                       if (_gameStarted) // Show game components when the game has started

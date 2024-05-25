@@ -5,7 +5,6 @@ import 'package:virtualcityguess/models/locations.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
 
   Future<String> createRoom(String hostName) async {
     String roomId = _generateRoomId();
@@ -85,31 +84,48 @@ class FirestoreService {
     });
   }
 
-  
+  Future<List<MapEntry<String, int>>> fetchAndSortPlayersByPoints(
+      String roomId) async {
+    DocumentSnapshot roomSnapshot =
+        await _firestore.collection('rooms').doc(roomId).get();
 
-  Future<String?> fetchCurrentTarget(String roomId) async {
-  try {
-    // Get room document reference
-    DocumentReference roomRef = FirebaseFirestore.instance.collection('rooms').doc(roomId);
-    
-    // Get room snapshot
-    DocumentSnapshot roomSnapshot = await roomRef.get();
-    
-    // Check if room exists
     if (!roomSnapshot.exists) {
       throw Exception('Room does not exist');
     }
-    
-    // Get current target from room snapshot
-    String? currentTarget = roomSnapshot['currentTarget'];
-    
-    return currentTarget;
-  } catch (e) {
-    print("An error occurred while fetching current target: $e");
-    return null; // Return null if there's any error
-  }
-}
 
+    // Fetch players and their points
+    Map<String, int> players = Map<String, int>.from(roomSnapshot['players']);
+
+    // Sort players by points in descending order
+    List<MapEntry<String, int>> sortedPlayers = players.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sortedPlayers;
+  }
+
+  Future<String?> fetchCurrentTarget(String roomId) async {
+    try {
+      // Get room document reference
+      DocumentReference roomRef =
+          FirebaseFirestore.instance.collection('rooms').doc(roomId);
+
+      // Get room snapshot
+      DocumentSnapshot roomSnapshot = await roomRef.get();
+
+      // Check if room exists
+      if (!roomSnapshot.exists) {
+        throw Exception('Room does not exist');
+      }
+
+      // Get current target from room snapshot
+      String? currentTarget = roomSnapshot['currentTarget'];
+
+      return currentTarget;
+    } catch (e) {
+      print("An error occurred while fetching current target: $e");
+      return null; // Return null if there's any error
+    }
+  }
 
   Future<List<String>> getJoinedPlayers(String roomId) async {
     DocumentSnapshot roomSnapshot =

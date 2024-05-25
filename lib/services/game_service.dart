@@ -96,7 +96,8 @@ class GameService with ChangeNotifier {
       DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
       await roomRef.update({
         'currentTarget': randomDocument.id,
-        'usedLocations': FieldValue.arrayUnion([randomDocument.id])
+        'usedLocations': FieldValue.arrayUnion([randomDocument.id]),
+        'gameStarted' : true
       });
 
       // You can continue with your logic here...
@@ -143,7 +144,7 @@ class GameService with ChangeNotifier {
 
       // Calculate distance, etc. if needed
 
-      print("$playerName submitted location successfully!");
+     
     } catch (e) {
       print("An error occurred while submitting location: $e");
       throw e;

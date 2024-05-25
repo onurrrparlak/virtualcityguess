@@ -65,7 +65,7 @@ class _GameScreenState extends State<GameScreen> {
                     Container(
                       width: scoreboardWidth,
                       color: Colors.blue, // Just for visibility
-                      child: GameSidebar(),
+                      child: GameSidebar(roomId: widget.roomId,),
                     ),
                     // VideoPlayer
                     Expanded(
@@ -92,17 +92,34 @@ class _GameScreenState extends State<GameScreen> {
                   ],
                 ),
               ),
+              
               // Bottom Section with Buttons
               Container(
                 height: constraints.maxHeight * 0.1,
                 // Add your buttons here
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Selector<TimerService, bool>(
-                      selector: (_, timerService) => timerService.timerExpired,
-                      builder: (_, timerExpired, __) {
-                        return ElevatedButton(
+                child: Selector<TimerService, bool>(
+                  selector: (_, timerService) => timerService.timerExpired,
+                  builder: (_, timerExpired, __) {
+                    return Column(
+                      children: [
+                         if (widget.isHost && timerExpired)
+                        ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return CustomDialogSheet(
+                                  roomId: widget.roomId,
+                                  playerName: widget.playerName,
+                                );
+                              },
+                            );
+                          },
+                          child: locationNotifier.locationSubmitted || timerExpired
+                              ? Text('Next Round')
+                              : Text(''),
+                        ),
+                        ElevatedButton(
                           onPressed: () {
                             showDialog(
                               context: context,
@@ -117,11 +134,10 @@ class _GameScreenState extends State<GameScreen> {
                           child: locationNotifier.locationSubmitted || timerExpired
                               ? Text('Show Results')
                               : Text('Guess Location'),
-                        );
-                      },
-                    ),
-                    // Adjust spacing between buttons if needed
-                  ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],

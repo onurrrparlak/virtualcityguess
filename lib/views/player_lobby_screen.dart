@@ -17,8 +17,6 @@ class PlayerLobbyScreen extends StatefulWidget {
 }
 
 class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
-  
-
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
@@ -75,19 +73,18 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                   String hostName = roomData['host'];
                   bool gameStarted = roomData['gameStarted'];
                   if (gameStarted) {
-                     Future.delayed(Duration(seconds: 2), () {
-                      WidgetsBinding.instance!.addPostFrameCallback((_) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => GameScreen(
-                              roomId: widget.roomId,
-                              playerName: widget.currentPlayerName,
-                              isHost: false,
-                            ),
+                    // Delay for 2 seconds before navigating
+                    Future.delayed(Duration(seconds: 2), () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GameScreen(
+                            roomId: widget.roomId,
+                            playerName: widget.currentPlayerName,
+                            isHost: false,
                           ),
-                        );
-                      });
+                        ),
+                      );
                     });
                   }
 
@@ -124,7 +121,8 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                                           ? 'You'
                                           : 'Player',
                                       style: TextStyle(
-                                        color: playerName == widget.currentPlayerName
+                                        color: playerName ==
+                                                widget.currentPlayerName
                                             ? Colors.blue
                                             : null,
                                       ),
