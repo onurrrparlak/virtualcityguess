@@ -3,8 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 
 class GameSidebar extends StatelessWidget {
+  static int _buildCount = 0;
+  
   @override
   Widget build(BuildContext context) {
+     _buildCount++; // Increment build count
+    print('Build method called $_buildCount times');
     return Container(
       width: MediaQuery.of(context).size.width * 0.10,
       height: MediaQuery.of(context).size.height,

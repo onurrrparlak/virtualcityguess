@@ -11,18 +11,20 @@ class GameScreen extends StatefulWidget {
   final String playerName;
   final bool isHost;
 
-  const GameScreen(
-      {Key? key,
-      required this.roomId,
-      required this.playerName,
-      required this.isHost})
-      : super(key: key);
+  const GameScreen({
+    Key? key,
+    required this.roomId,
+    required this.playerName,
+    required this.isHost,
+  }) : super(key: key);
 
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
+  static int _buildCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -39,23 +41,20 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final locationNotifier = Provider.of<LocationNotifier>(context);
-    final timerNotifier = Provider.of<TimerService>(context);
+
+    _buildCount++; // Increment build count
+    print('Build method called $_buildCount times');
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
           final screenSize = constraints.biggest;
-          final isSmallScreen =
-              screenSize.width < 800; // Define your threshold for small screen
-      
+          final isSmallScreen = screenSize.width < 800;
+
           final scoreboardWidth = isSmallScreen
               ? constraints.maxWidth * 0.25
               : constraints.maxWidth * 0.10;
           final videoWidth = constraints.maxWidth - scoreboardWidth;
-      
-        //  print('Room ID: ${widget.roomId}');
-          //print('Player Name: ${widget.playerName}');
-          //print('Is Host: ${widget.isHost ? 'Yes' : 'No'}');
-      
+
           return Column(
             children: [
               // Top Section with Scoreboard and VideoPlayer
@@ -77,12 +76,12 @@ class _GameScreenState extends State<GameScreen> {
                             if (gameService.currentTarget == null) {
                               return CircularProgressIndicator();
                             }
-                          //  print('Current Target: ${gameService.currentTarget}');
                             return Column(
                               children: [
                                 Expanded(
                                   child: VideoPlayerWidget(
-                                      videoUrl: gameService.videoUrl!),
+                                    videoUrl: gameService.videoUrl!,
+                                  ),
                                 ),
                               ],
                             );
@@ -100,21 +99,26 @@ class _GameScreenState extends State<GameScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return CustomDialogSheet(
-                              roomId: widget.roomId,
-                              playerName: widget.playerName,
+                    Selector<TimerService, bool>(
+                      selector: (_, timerService) => timerService.timerExpired,
+                      builder: (_, timerExpired, __) {
+                        return ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return CustomDialogSheet(
+                                  roomId: widget.roomId,
+                                  playerName: widget.playerName,
+                                );
+                              },
                             );
                           },
+                          child: locationNotifier.locationSubmitted || timerExpired
+                              ? Text('Show Results')
+                              : Text('Guess Location'),
                         );
                       },
-                      child: locationNotifier.locationSubmitted || timerNotifier.timerExpired
-                          ? Text('Show Results')
-                          : Text('Guess Location'),
                     ),
                     // Adjust spacing between buttons if needed
                   ],
