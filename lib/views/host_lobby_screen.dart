@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
+import 'package:virtualcityguess/services/timer_service.dart';
 import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
-
-
 
 class HostLobbyScreen extends StatelessWidget {
   final String roomId;
@@ -14,22 +14,25 @@ class HostLobbyScreen extends StatelessWidget {
   HostLobbyScreen({required this.roomId, required this.playerName});
 
   void _startGame(BuildContext context) async {
-  
-  await GameService().startGame(roomId);
-  
-  // Navigate to the GameScreen
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => GameScreen(
-        roomId: roomId,
-        playerName: playerName, // Assuming 'Host' is the host's player name
-        isHost: true,
-      ),
-    ),
-  );
-}
+    await GameService().startGame(roomId);
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final timerService = Provider.of<TimerService>(context, listen: false);
+      timerService.startTimer();
+    });
+
+    // Navigate to the GameScreen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GameScreen(
+          roomId: roomId,
+          playerName: playerName, // Assuming 'Host' is the host's player name
+          isHost: true,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +40,6 @@ class HostLobbyScreen extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-     
       body: Container(
         constraints: BoxConstraints.expand(),
         padding: EdgeInsets.all(screenWidth * 0.05),
@@ -108,7 +110,8 @@ class HostLobbyScreen extends StatelessWidget {
                                         Icon(Icons.circle, color: Colors.green),
                                         SizedBox(width: 5),
                                         Text('(Host)',
-                                            style: TextStyle(color: Colors.green)),
+                                            style:
+                                                TextStyle(color: Colors.green)),
                                       ],
                                     )
                                   : Row(
@@ -116,7 +119,8 @@ class HostLobbyScreen extends StatelessWidget {
                                       children: [
                                         ElevatedButton(
                                           onPressed: () {
-                                            String playerName = joinedPlayers[index];
+                                            String playerName =
+                                                joinedPlayers[index];
                                             FirestoreService()
                                                 .kickPlayer(roomId, playerName);
                                           },
@@ -130,7 +134,8 @@ class HostLobbyScreen extends StatelessWidget {
                                         ElevatedButton(
                                           onPressed: () {
                                             // Logic to ban player
-                                            String playerName = joinedPlayers[index];
+                                            String playerName =
+                                                joinedPlayers[index];
                                             showDialog(
                                               context: context,
                                               builder: (BuildContext context) {
@@ -148,8 +153,9 @@ class HostLobbyScreen extends StatelessWidget {
                                                     ),
                                                     TextButton(
                                                       onPressed: () {
-                                                        FirestoreService().banPlayer(
-                                                            roomId, playerName);
+                                                        FirestoreService()
+                                                            .banPlayer(roomId,
+                                                                playerName);
                                                         Navigator.of(context)
                                                             .pop(); // Close the dialog
                                                       },
@@ -176,7 +182,7 @@ class HostLobbyScreen extends StatelessWidget {
                         flex: 3, // 30% of the available space
                         child: ElevatedButton(
                           onPressed: () {
-                           _startGame(context);
+                            _startGame(context);
                           },
                           child: Text('Start Game'),
                         ),

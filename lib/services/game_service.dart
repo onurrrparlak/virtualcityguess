@@ -1,59 +1,75 @@
+import 'dart:async'; // Added for delay
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:virtualcityguess/models/locations.dart';
-
 import 'package:latlong2/latlong.dart';
+import 'package:virtualcityguess/provider/location_notifier_provider.dart';
+import 'package:virtualcityguess/services/timer_service.dart';
 
 class GameService with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  int _currentRound = 1;
   String? _currentTarget;
   String? _videoUrl;
   String? get currentTarget => _currentTarget;
   String? get videoUrl => _videoUrl;
 
- Future<void> listenToRoomUpdates(String roomId) async {
-  _firestore.collection('rooms').doc(roomId).snapshots().listen((snapshot) async {
-    if (snapshot.exists) {
-      var data = snapshot.data() as Map<String, dynamic>;
+  Future<void> listenToRoomUpdates(BuildContext context, String roomId) async {
+    _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .snapshots()
+        .listen((snapshot) async {
+      if (snapshot.exists) {
+        var data = snapshot.data() as Map<String, dynamic>;
 
-
-      _currentTarget = data['currentTarget'];
-     
-      notifyListeners();
-      await fetchVideoUrl();
-
-      // Check if 'submittedPlayers' exists and is a list
-      List<dynamic> submittedPlayers = [];
-      if (data.containsKey('submittedPlayers') && data['submittedPlayers'] is List) {
-        submittedPlayers = data['submittedPlayers'];
-      } else {
-       
-      }
-
-      // Check if 'players' exists and is a list
-      List<dynamic> players = [];
-      if (data.containsKey('players') && data['players'] is List) {
-        players = data['players'];
-      } else {
+        _currentTarget = data['currentTarget'];
         
-      }
 
-   
-
-      if (submittedPlayers.length == players.length && players.isNotEmpty) {
-       
-        // Notify listeners or take any other action you need
         notifyListeners();
+        await fetchVideoUrl();
+
+        // Check if 'submittedPlayers' exists and is a list
+        List<dynamic> submittedPlayers = [];
+        if (data.containsKey('submittedPlayers') &&
+            data['submittedPlayers'] is List) {
+          submittedPlayers = data['submittedPlayers'];
+        }
+
+        // Check if 'players' exists and is a list
+        List<dynamic> players = [];
+        if (data.containsKey('players') && data['players'] is List) {
+          players = data['players'];
+        }
+
+        if (submittedPlayers.length == players.length && players.isNotEmpty) {
+          // Notify listeners or take any other action you need
+          notifyListeners();
+        }
+
+        // Check if round number changed
+        int newRound = data['currentRound'];
+         print(newRound);
+        if (newRound != _currentRound) {
+
+          print('yeniround: $newRound');
+          print('şuanki round: $_currentRound');
+          _currentRound = newRound;
+          // Reset location submission
+          Provider.of<LocationNotifier>(context, listen: false)
+              .resetLocationSubmission();
+               Provider.of<LocationNotifier>(context, listen: false)
+              .resetCurrentLocation();
+         Provider.of<TimerService>(context, listen: false).resetTimer();
+
+         Provider.of<LocationNotifier>(context, listen: false).resetMapState();
+        }
       }
-    } else {
-    
-    }
-  });
-}
-
-
+    });
+  }
 
   Future<void> fetchVideoUrl() async {
     if (_currentTarget != null) {
@@ -69,8 +85,6 @@ class GameService with ChangeNotifier {
 
   Future<void> startGame(String roomId) async {
     try {
-    
-
       // Get a snapshot of your collection
       QuerySnapshot collectionSnapshot =
           await FirebaseFirestore.instance.collection('locations').get();
@@ -86,8 +100,6 @@ class GameService with ChangeNotifier {
       // Get the document that falls under the random index
       DocumentSnapshot randomDocument = collectionSnapshot.docs[randomIndex];
 
-   
-
       // Extract data from the randomly selected document
       LocationModel randomLocation =
           LocationModel.fromDocumentSnapshot(randomDocument);
@@ -96,15 +108,11 @@ class GameService with ChangeNotifier {
       DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
       await roomRef.update({
         'currentTarget': randomDocument.id,
+        'currentRound': 1,
         'usedLocations': FieldValue.arrayUnion([randomDocument.id]),
-        'gameStarted' : true
+        'gameStarted': true,
       });
-
-      // You can continue with your logic here...
-
-     
     } catch (e) {
-    
       throw e; // Rethrow the exception to propagate it upwards
     }
   }
@@ -134,20 +142,74 @@ class GameService with ChangeNotifier {
   }
 
   Future<void> userSubmitLocation(
-      String roomId, String playerName, LatLng userLocation) async {
-    try {
-      // Update the submittedPlayers field
-      DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
-      await roomRef.update({
-        'submittedPlayers': FieldValue.arrayUnion([playerName])
-      });
-
-      // Calculate distance, etc. if needed
-
-     
-    } catch (e) {
-      print("An error occurred while submitting location: $e");
-      throw e;
-    }
+      String roomId, String playerName, bool submitted) async {
+    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+    await roomRef.update({
+      'submittedPlayers.$playerName': submitted,
+    });
   }
+  
+
+ Future<void> nextRound(String roomId) async {
+  try {
+    // Get the current room data
+    DocumentSnapshot roomSnapshot =
+        await _firestore.collection('rooms').doc(roomId).get();
+    var roomData = roomSnapshot.data() as Map<String, dynamic>;
+    List<dynamic> usedLocations = roomData['usedLocations'] ?? [];
+
+    // Get the current round number
+    int currentRound = roomData['currentRound'] ?? 0;
+
+    // Get a snapshot of your collection
+    QuerySnapshot collectionSnapshot =
+        await FirebaseFirestore.instance.collection('locations').get();
+
+    // Check if any document is found
+    if (collectionSnapshot.docs.isEmpty) {
+      throw Exception('No documents found in the collection');
+    }
+
+    // Find a new unused location
+    DocumentSnapshot? newLocation;
+    do {
+      int randomIndex = Random().nextInt(collectionSnapshot.docs.length);
+      DocumentSnapshot potentialLocation =
+          collectionSnapshot.docs[randomIndex];
+      if (!usedLocations.contains(potentialLocation.id)) {
+        newLocation = potentialLocation;
+      }
+    } while (newLocation == null);
+
+    // Extract data from the randomly selected document
+    LocationModel randomLocation =
+        LocationModel.fromDocumentSnapshot(newLocation);
+
+    // Update roomId document with the selected random document ID and increment the current round
+    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+    // Reset submitted players
+    Map<String, dynamic> submittedPlayersReset = {};
+    Map<String, dynamic>? submittedPlayers = roomData['submittedPlayers'];
+    if (submittedPlayers != null) {
+      submittedPlayers.forEach((playerId, _) {
+        submittedPlayersReset[playerId] = false;
+      });
+    }
+    await roomRef.update({
+      'currentTarget': newLocation.id,
+      'usedLocations': FieldValue.arrayUnion([newLocation.id]),
+      'submittedPlayers': submittedPlayersReset,
+      'currentRound': currentRound + 1, // Increment the current round
+    });
+
+    // Wait for 3 seconds before notifying listeners
+    await Future.delayed(Duration(seconds: 3));
+
+    // Notify listeners or take any other action you need
+    notifyListeners();
+  } catch (e) {
+    throw e; // Rethrow the exception to propagate it upwards
+  }
+}
+
 }

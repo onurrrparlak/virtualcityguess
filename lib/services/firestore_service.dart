@@ -150,19 +150,7 @@ class FirestoreService {
   }
 
 // Add a new function to check if all players have submitted their locations
-  Future<bool> checkAllPlayersSubmitted(String roomId) async {
-    DocumentSnapshot roomSnapshot =
-        await _firestore.collection('rooms').doc(roomId).get();
-    if (!roomSnapshot.exists) {
-      throw Exception('Room does not exist');
-    }
-    Map<String, dynamic> submittedPlayers =
-        Map<String, dynamic>.from(roomSnapshot['submittedPlayers']);
-    if (submittedPlayers.length == 0) {
-      return false; // No players have submitted
-    }
-    return submittedPlayers.values.every((submitted) => submitted == true);
-  }
+
 
   Stream<DocumentSnapshot> getRoomStream(String roomId) {
     return _firestore.collection('rooms').doc(roomId).snapshots();
@@ -179,4 +167,6 @@ class FirestoreService {
       List.generate(10, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
     );
   }
+
+  
 }

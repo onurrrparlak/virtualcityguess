@@ -20,7 +20,7 @@ class GameSidebar extends StatelessWidget {
     return Container(
       width: MediaQuery.of(context).size.width * 0.10,
       height: MediaQuery.of(context).size.height,
-      color: Colors.blue,
+      color: Colors.black,
       child: Column(
         children: [
           Consumer<TimerService>(
@@ -51,6 +51,7 @@ class GameSidebar extends StatelessWidget {
 
                 Map<String, dynamic> data = snapshot.data!.data() as Map<String, dynamic>;
                 Map<String, int> players = Map<String, int>.from(data['players']);
+                Map<String, bool> submittedPlayers = Map<String, bool>.from(data['submittedPlayers'] ?? {});
 
                 List<MapEntry<String, int>> sortedPlayers = players.entries.toList()
                   ..sort((a, b) => b.value.compareTo(a.value));
@@ -59,10 +60,22 @@ class GameSidebar extends StatelessWidget {
                   itemCount: sortedPlayers.length,
                   itemBuilder: (context, index) {
                     var player = sortedPlayers[index];
+                    bool submitted = submittedPlayers[player.key] ?? false;
+
                     return ListTile(
-                      title: Text(
-                        '${player.key}: ${player.value} points',
-                        style: TextStyle(color: Colors.white),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${player.key}: ${player.value} points',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          if (submitted)
+                            Icon(
+                              Icons.check,
+                              color: Colors.green,
+                            ),
+                        ],
                       ),
                     );
                   },

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
@@ -49,7 +50,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
+/*
 class MapScreen extends StatefulWidget {
   final String roomId;
   final String playerName;
@@ -240,22 +241,22 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   void _nextLocation() async {
     // Check if all players have submitted their locations
-    final allPlayersSubmitted =
-        await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
+  //  final allPlayersSubmitted =
+    //    await _firestoreService.checkAllPlayersSubmitted(widget.roomId);
 
-    if (!allPlayersSubmitted) {
+    //if (!allPlayersSubmitted) {
       // Show a message indicating that all players need to submit their locations
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Not all players have submitted their locations yet.'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-      return; // Exit the function without advancing to the next round
+     // ScaffoldMessenger.of(context).showSnackBar(
+      //  SnackBar(
+       //   content: Text('Not all players have submitted their locations yet.'),
+        //  duration: Duration(seconds: 3),
+        //),
+     // );
+    //  return; // Exit the function without advancing to the next round
     }
 
     // Update submittedPlayers in Firestore to mark the current player as not submitted
-    await _firestoreService.updatePlayerSubmissionStatus(
+   await _firestoreService.updatePlayerSubmissionStatus(
         widget.roomId, widget.playerName, false);
 
     setState(() {
@@ -651,3 +652,4 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 }
+*/

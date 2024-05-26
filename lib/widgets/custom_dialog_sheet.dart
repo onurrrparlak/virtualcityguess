@@ -2,62 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 
-class LocationNotifier extends ChangeNotifier {
-  LatLng _currentLocation = LatLng(0, 0);
-  LatLng? _currentTargetLocation;
-  bool _showLineAndTargetMarker = false;
-  bool _locationSubmitted = false;
-  LatLngBounds? _mapBounds;
-  double _zoomLevel = 10.0; // Default zoom level
-  LatLng _mapCenter = LatLng(0, 0); // Default map center
-
-  LatLng get currentLocation => _currentLocation;
-  LatLng? get currentTargetLocation => _currentTargetLocation;
-  bool get showLineAndTargetMarker => _showLineAndTargetMarker;
-  bool get locationSubmitted => _locationSubmitted;
-  LatLngBounds? get mapBounds => _mapBounds;
-  double get zoomLevel => _zoomLevel;
-  LatLng get mapCenter => _mapCenter;
-
-  void setCurrentLocation(LatLng location) {
-    _currentLocation = location;
-    notifyListeners();
-  }
-
-  void setCurrentTargetLocation(LatLng? location) {
-    _currentTargetLocation = location;
-    notifyListeners();
-  }
-
-  void setShowLineAndTargetMarker(bool value) {
-    _showLineAndTargetMarker = value;
-    notifyListeners();
-  }
-
-  void setLocationSubmitted(bool value) {
-    _locationSubmitted = value;
-    notifyListeners();
-  }
-
-  void updateMapBounds(LatLngBounds bounds) {
-    _mapBounds = bounds;
-    notifyListeners();
-  }
-
-  void updateMapZoomLevel(double zoomLevel) {
-    _zoomLevel = zoomLevel;
-    notifyListeners();
-  }
-
-  void updateMapCenter(LatLng center) {
-    _mapCenter = center;
-    notifyListeners();
-  }
-}
 
 class CustomDialogSheet extends StatefulWidget {
   final String roomId;
@@ -102,8 +51,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
     return Selector<TimerService, bool>(
       selector: (_, timerService) => timerService.timerExpired,
       builder: (context, timerExpired, _) {
-        print(timerExpired);
-        print('sa');
+        print('Zaman doldu $timerExpired');
         return Dialog(
           key: UniqueKey(), //
           shape: RoundedRectangleBorder(
@@ -120,6 +68,9 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                     Expanded(
                       child: Consumer<LocationNotifier>(
                         builder: (context, locationNotifier, child) {
+                         
+                          print('Location notifier değeri : ${locationNotifier.locationSubmitted}');
+
                           return FlutterMap(
                             mapController: _mapController,
                             options: MapOptions(
@@ -226,11 +177,11 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                                           final gameService =
                                               Provider.of<GameService>(context,
                                                   listen: false);
+
                                           await gameService.userSubmitLocation(
-                                            widget.roomId,
-                                            widget.playerName,
-                                            locationNotifier.currentLocation,
-                                          );
+                                              widget.roomId,
+                                              widget.playerName,
+                                              true);
 
                                           if (locationNotifier
                                                   .currentTargetLocation !=

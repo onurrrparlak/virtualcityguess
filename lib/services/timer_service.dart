@@ -16,12 +16,12 @@ class TimerService extends ChangeNotifier {
       if (_timerDuration < 1) {
         _timer?.cancel();
         if (!_timerExpired) {
-          print('nande');
           _timerExpired = true;
           notifyListeners();
         }
       } else {
         _timerDuration--;
+
         notifyListeners();
       }
     });
@@ -29,9 +29,10 @@ class TimerService extends ChangeNotifier {
 
   void resetTimer() {
     _timer?.cancel();
-    if (_timerDuration != 60 || _timerExpired) {
-      _timerDuration = 60;
+    if (_timerDuration != 30 || _timerExpired) {
+      _timerDuration = 30;
       _timerExpired = false;
+      startTimer();
       notifyListeners();
     }
   }
