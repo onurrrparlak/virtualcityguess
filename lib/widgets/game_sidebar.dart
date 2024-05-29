@@ -13,7 +13,7 @@ class GameSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     _buildCount++; // Increment build count
-    print('Build method called $_buildCount times');
+  
 
     final FirestoreService firestoreService = FirestoreService();
 

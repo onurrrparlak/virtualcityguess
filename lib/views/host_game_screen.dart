@@ -10,26 +10,23 @@ import 'package:virtualcityguess/widgets/game_sidebar.dart';
 import 'package:virtualcityguess/widgets/custom_dialog_sheet.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
 
-class GameScreen extends StatefulWidget {
+class HostGameScreen extends StatefulWidget {
   final String roomId;
   final String playerName;
-  final bool isHost;
 
-  const GameScreen({
+  const HostGameScreen({
     Key? key,
     required this.roomId,
     required this.playerName,
-    required this.isHost,
   }) : super(key: key);
 
   @override
-  State<GameScreen> createState() => _GameScreenState();
+  State<HostGameScreen> createState() => _HostGameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _HostGameScreenState extends State<HostGameScreen> {
   static int _buildCount = 0;
-  late Timer _timer;
-
+  bool _allPlayersSubmitted = false;
 
   @override
   @override
@@ -40,25 +37,37 @@ class _GameScreenState extends State<GameScreen> {
       final timerService = Provider.of<TimerService>(context, listen: false);
       timerService.startTimer();
 
-  
-
+      void startTimer() {
+        Timer timer = Timer.periodic(Duration(seconds: 5), (Timer t) {
+          if (timerService.timerDuration <= 0) {
+            t.cancel(); // Cancel the timer if the condition is no longer met
+          } else {
+            checkAllPlayersSubmitted();
+          }
+        });
+      }
     });
 
     final gameService = Provider.of<GameService>(context, listen: false);
     gameService.listenToRoomUpdates(context, widget.roomId);
-
-    
   }
 
-
+  Future<void> checkAllPlayersSubmitted() async {
+    final gameService = Provider.of<GameService>(context, listen: false);
+    final allSubmitted =
+        await gameService.checkAllPlayersSubmitted(widget.roomId);
+    setState(() {
+      _allPlayersSubmitted = allSubmitted;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final locationNotifier = Provider.of<LocationNotifier>(context);
-      int? _currentRound = Provider.of<GameService>(context).currentRound;
-
+    int? _currentRound = Provider.of<GameService>(context).currentRound;
 
     _buildCount++; // Increment build count
+    print('build sayısı $_buildCount');
    
     print(_currentRound);
 
@@ -120,22 +129,32 @@ class _GameScreenState extends State<GameScreen> {
                 child: Selector<TimerService, bool>(
                   selector: (_, timerService) => timerService.timerExpired,
                   builder: (_, timerExpired, __) {
+                    print('Timer Value 1:  $timerExpired');
+                    if (timerExpired) {
+                    
+                      Provider.of<GameService>(context, listen: false)
+                          .updateRoundEndedInFirestore(widget.roomId);
+                      
+                    }
                     return Column(
                       children: [
-                         if (Provider.of<GameService>(context).gameShouldEnd)
+                       
+                        if (timerExpired || _allPlayersSubmitted)
                           ElevatedButton(
                             onPressed: () async {
-                              // Navigate to the game result screen
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => GameResultsScreen(),
-                                ),
-                              );
+                            //  print('Timer Value 2 : $timerExpired');
+                              final gameService = Provider.of<GameService>(
+                                  context,
+                                  listen: false);
+                             /* Provider.of<TimerService>(context, listen: false)
+                                  .resetTimer();*/
+                              await gameService.nextRound(widget.roomId);
                             },
-                            child: Text('End The Game'),
+                            child: locationNotifier.locationSubmitted ||
+                                    timerExpired
+                                ? Text('Next Round')
+                                : Text(''),
                           ),
-                       
                         ElevatedButton(
                           onPressed: () {
                             showDialog(

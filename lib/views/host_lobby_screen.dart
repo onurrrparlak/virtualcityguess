@@ -6,15 +6,22 @@ import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
+import 'package:virtualcityguess/views/host_game_screen.dart';
 
-class HostLobbyScreen extends StatelessWidget {
+class HostLobbyScreen extends StatefulWidget {
   final String roomId;
   final String playerName;
 
   HostLobbyScreen({required this.roomId, required this.playerName});
 
+  @override
+  State<HostLobbyScreen> createState() => _HostLobbyScreenState();
+}
+
+class _HostLobbyScreenState extends State<HostLobbyScreen> {
+  bool _isButtonDisabled = false;
   void _startGame(BuildContext context) async {
-    await GameService().startGame(roomId);
+    await GameService().startGame(widget.roomId);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final timerService = Provider.of<TimerService>(context, listen: false);
@@ -25,10 +32,9 @@ class HostLobbyScreen extends StatelessWidget {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => GameScreen(
-          roomId: roomId,
-          playerName: playerName, // Assuming 'Host' is the host's player name
-          isHost: true,
+        builder: (context) => HostGameScreen(
+          roomId: widget.roomId,
+          playerName: widget.playerName, // Assuming 'Host' is the host's player name
         ),
       ),
     );
@@ -50,14 +56,14 @@ class HostLobbyScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: SelectableText(
-                    'Room ID: $roomId',
+                    'Room ID: ${widget.roomId}',
                     style: TextStyle(fontSize: screenWidth * 0.04),
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.copy),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: roomId));
+                    Clipboard.setData(ClipboardData(text: widget.roomId));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Room ID copied to clipboard')),
                     );
@@ -73,7 +79,7 @@ class HostLobbyScreen extends StatelessWidget {
             SizedBox(height: screenHeight * 0.015),
             Expanded(
               child: StreamBuilder<DocumentSnapshot>(
-                stream: FirestoreService().getRoomStream(roomId),
+                stream: FirestoreService().getRoomStream(widget.roomId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(child: CircularProgressIndicator());
@@ -122,7 +128,7 @@ class HostLobbyScreen extends StatelessWidget {
                                             String playerName =
                                                 joinedPlayers[index];
                                             FirestoreService()
-                                                .kickPlayer(roomId, playerName);
+                                                .kickPlayer(widget.roomId, playerName);
                                           },
                                           child: SizedBox(
                                             width: screenWidth * 0.15,
@@ -154,7 +160,7 @@ class HostLobbyScreen extends StatelessWidget {
                                                     TextButton(
                                                       onPressed: () {
                                                         FirestoreService()
-                                                            .banPlayer(roomId,
+                                                            .banPlayer(widget.roomId,
                                                                 playerName);
                                                         Navigator.of(context)
                                                             .pop(); // Close the dialog
@@ -181,9 +187,17 @@ class HostLobbyScreen extends StatelessWidget {
                       Expanded(
                         flex: 3, // 30% of the available space
                         child: ElevatedButton(
-                          onPressed: () {
-                            _startGame(context);
-                          },
+                          onPressed: _isButtonDisabled
+                              ? null
+                              : () {
+                                 setState(() {
+                                    // Disable the button after it's clicked
+                                    _isButtonDisabled = true;
+                                  });
+                                  _startGame(context);
+                                 
+                                },
+                               
                           child: Text('Start Game'),
                         ),
                       ),

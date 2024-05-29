@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class TimerService extends ChangeNotifier {
-  int _timerDuration = 30;
+  int _timerDuration = 10;
   Timer? _timer;
   bool _timerExpired = false;
 
@@ -12,6 +12,7 @@ class TimerService extends ChangeNotifier {
   
 
   void startTimer() {
+    print('start $_timerExpired');
     const oneSecond = Duration(seconds: 1);
     _timer?.cancel();
     _timer = Timer.periodic(oneSecond, (timer) {
@@ -19,6 +20,7 @@ class TimerService extends ChangeNotifier {
         _timer?.cancel();
         if (!_timerExpired) {
           _timerExpired = true;
+           print('bitti $_timerExpired');
           notifyListeners();
         }
       } else {
@@ -31,23 +33,16 @@ class TimerService extends ChangeNotifier {
   
 
   void resetTimer() {
-    _timer?.cancel();
-    if (_timerDuration != 30 || _timerExpired) {
-      _timerDuration = 30;
+  print('Girdi $_timerExpired');
+    if (_timerDuration != 10 || _timerExpired) {
+      _timerDuration = 10;
       _timerExpired = false;
       startTimer();
       notifyListeners();
+        print('Çıktı $_timerExpired');
     }
   }
 
-  void cancelTimer() {
-    _timer?.cancel();
-    if (_timerDuration != 0 || !_timerExpired) {
-      _timerDuration = 0;
-      _timerExpired = true;
-      notifyListeners();
-    }
-  }
 
   @override
   void dispose() {

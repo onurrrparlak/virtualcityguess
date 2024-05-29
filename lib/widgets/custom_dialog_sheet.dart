@@ -7,7 +7,6 @@ import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 
-
 class CustomDialogSheet extends StatefulWidget {
   final String roomId;
   final String playerName;
@@ -24,6 +23,7 @@ class CustomDialogSheet extends StatefulWidget {
 class _CustomDialogSheetState extends State<CustomDialogSheet> {
   final MapController _mapController = MapController();
   var buildNumber = 0;
+  int points = 0;
 
   @override
   void initState() {
@@ -68,8 +68,8 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                     Expanded(
                       child: Consumer<LocationNotifier>(
                         builder: (context, locationNotifier, child) {
-                         
-                          print('Location notifier değeri : ${locationNotifier.locationSubmitted}');
+                          print(
+                              'Location notifier değeri : ${locationNotifier.locationSubmitted}');
 
                           return FlutterMap(
                             mapController: _mapController,
@@ -165,7 +165,10 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                       Consumer<LocationNotifier>(
                         builder: (context, locationNotifier, _) {
                           return locationNotifier.locationSubmitted
-                              ? SizedBox() // Return an empty SizedBox if locationSubmitted is true
+                              ? Container(
+                                  color: Colors.white,
+                                  child: Text('This round points: $points'),
+                                ) // Return an empty SizedBox if locationSubmitted is true
                               : Container(
                                   width: double.infinity,
                                   padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -216,8 +219,6 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
 
                                           double distanceInKm = distance /
                                               1000; // Convert distance to kilometers
-
-                                          int points;
 
                                           if (distanceInKm <= 0.5) {
                                             points = 600;

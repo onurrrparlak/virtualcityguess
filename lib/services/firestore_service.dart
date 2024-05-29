@@ -68,21 +68,26 @@ class FirestoreService {
     }
   }
 
-  Future<void> updatePoints(
-      String roomId, String playerName, int points) async {
-    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
-    await _firestore.runTransaction((transaction) async {
-      DocumentSnapshot roomSnapshot = await transaction.get(roomRef);
-      if (!roomSnapshot.exists) {
-        throw Exception('Room does not exist');
-      }
-      Map<String, int> players = Map<String, int>.from(roomSnapshot['players']);
-      if (players.containsKey(playerName)) {
-        players[playerName] = points;
-        transaction.update(roomRef, {'players': players});
-      }
-    });
-  }
+Future<void> updatePoints(
+    String roomId, String playerName, int points) async {
+  DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+  await _firestore.runTransaction((transaction) async {
+    DocumentSnapshot roomSnapshot = await transaction.get(roomRef);
+    if (!roomSnapshot.exists) {
+      throw Exception('Room does not exist');
+    }
+    Map<String, dynamic> roomData = roomSnapshot.data() as Map<String, dynamic>;
+    Map<String, dynamic> players = Map<String, dynamic>.from(roomData['players']);
+    if (players.containsKey(playerName)) {
+      // Add points earned in this round to the total points
+      int totalPoints = players[playerName] + points;
+      players[playerName] = totalPoints;
+      // Update total points in Firestore
+      transaction.update(roomRef, {'players.$playerName': totalPoints});
+    }
+  });
+}
+
 
   Future<List<MapEntry<String, int>>> fetchAndSortPlayersByPoints(
       String roomId) async {
