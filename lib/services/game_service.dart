@@ -27,7 +27,6 @@ class GameService with ChangeNotifier {
         var data = snapshot.data() as Map<String, dynamic>;
 
         _currentTarget = data['currentTarget'];
-        
 
         notifyListeners();
         await fetchVideoUrl();
@@ -52,23 +51,44 @@ class GameService with ChangeNotifier {
 
         // Check if round number changed
         int newRound = data['currentRound'];
-         print(newRound);
+        print(newRound);
         if (newRound != _currentRound) {
-
           print('yeniround: $newRound');
           print('şuanki round: $_currentRound');
           _currentRound = newRound;
           // Reset location submission
           Provider.of<LocationNotifier>(context, listen: false)
               .resetLocationSubmission();
-               Provider.of<LocationNotifier>(context, listen: false)
+          Provider.of<LocationNotifier>(context, listen: false)
               .resetCurrentLocation();
-         Provider.of<TimerService>(context, listen: false).resetTimer();
+          Provider.of<TimerService>(context, listen: false).resetTimer();
 
-         Provider.of<LocationNotifier>(context, listen: false).resetMapState();
+          Provider.of<LocationNotifier>(context, listen: false).resetMapState();
         }
       }
     });
+  }
+
+  Future<bool> checkAllPlayersSubmitted(String roomId, bool isHost) async {
+    DocumentSnapshot roomSnapshot =
+        await _firestore.collection('rooms').doc(roomId).get();
+    if (!roomSnapshot.exists) {
+      throw Exception('Room does not exist');
+    }
+    Map<String, dynamic> submittedPlayers =
+        Map<String, dynamic>.from(roomSnapshot['submittedPlayers']);
+    if (submittedPlayers.length == 0) {
+      return false; // No players have submitted
+    }
+    bool allSubmitted =
+        submittedPlayers.values.every((submitted) => submitted == true);
+
+    if (isHost) {
+      // Only notify listeners when the client is the host
+      notifyListeners();
+    }
+
+    return allSubmitted;
   }
 
   Future<void> fetchVideoUrl() async {
@@ -89,7 +109,37 @@ class GameService with ChangeNotifier {
       QuerySnapshot collectionSnapshot =
           await FirebaseFirestore.instance.collection('locations').get();
 
-      // Check if any document is found
+      DocumentSnapshot<Object?> roomSnapshot = await FirebaseFirestore.instance
+          .collection('rooms')
+          .doc(roomId)
+          .get();
+
+      if (!roomSnapshot.exists) {
+        print('Room document does not exist');
+        throw Exception('Room document does not exist');
+      }
+
+      // Retrieve and print the data in the roomSnapshot, casting it to the correct type
+      Map<String, dynamic>? roomData =
+          roomSnapshot.data() as Map<String, dynamic>?;
+      if (roomData != null) {
+        print('Room data: $roomData');
+      } else {
+        print('Room data is null');
+      }
+
+      // Initialize submittedPlayers map
+      Map<String, bool> submittedPlayers = {};
+
+      // Populate submittedPlayers with players from roomData
+      if (roomData != null && roomData.containsKey('players')) {
+        Map<String, dynamic> players = roomData['players'];
+        players.forEach((key, value) {
+          submittedPlayers[key] = false;
+        });
+      }
+
+      // Check if any document is found in the collection
       if (collectionSnapshot.docs.isEmpty) {
         throw Exception('No documents found in the collection');
       }
@@ -104,18 +154,23 @@ class GameService with ChangeNotifier {
       LocationModel randomLocation =
           LocationModel.fromDocumentSnapshot(randomDocument);
 
-      // Update roomId document with the selected random document ID
+      // Update roomId document with the selected random document ID and submittedPlayers
       DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
       await roomRef.update({
         'currentTarget': randomDocument.id,
         'currentRound': 1,
+        'submittedPlayers': submittedPlayers,
         'usedLocations': FieldValue.arrayUnion([randomDocument.id]),
         'gameStarted': true,
       });
     } catch (e) {
+      print('Error starting game: $e');
       throw e; // Rethrow the exception to propagate it upwards
     }
   }
+
+
+  
 
   Future<LatLng?> fetchCurrentTargetLatLng() async {
     if (_currentTarget != null) {
@@ -148,68 +203,66 @@ class GameService with ChangeNotifier {
       'submittedPlayers.$playerName': submitted,
     });
   }
-  
 
- Future<void> nextRound(String roomId) async {
-  try {
-    // Get the current room data
-    DocumentSnapshot roomSnapshot =
-        await _firestore.collection('rooms').doc(roomId).get();
-    var roomData = roomSnapshot.data() as Map<String, dynamic>;
-    List<dynamic> usedLocations = roomData['usedLocations'] ?? [];
+  Future<void> nextRound(String roomId) async {
+    try {
+      // Get the current room data
+      DocumentSnapshot roomSnapshot =
+          await _firestore.collection('rooms').doc(roomId).get();
+      var roomData = roomSnapshot.data() as Map<String, dynamic>;
+      List<dynamic> usedLocations = roomData['usedLocations'] ?? [];
 
-    // Get the current round number
-    int currentRound = roomData['currentRound'] ?? 0;
+      // Get the current round number
+      int currentRound = roomData['currentRound'] ?? 0;
 
-    // Get a snapshot of your collection
-    QuerySnapshot collectionSnapshot =
-        await FirebaseFirestore.instance.collection('locations').get();
+      // Get a snapshot of your collection
+      QuerySnapshot collectionSnapshot =
+          await FirebaseFirestore.instance.collection('locations').get();
 
-    // Check if any document is found
-    if (collectionSnapshot.docs.isEmpty) {
-      throw Exception('No documents found in the collection');
-    }
-
-    // Find a new unused location
-    DocumentSnapshot? newLocation;
-    do {
-      int randomIndex = Random().nextInt(collectionSnapshot.docs.length);
-      DocumentSnapshot potentialLocation =
-          collectionSnapshot.docs[randomIndex];
-      if (!usedLocations.contains(potentialLocation.id)) {
-        newLocation = potentialLocation;
+      // Check if any document is found
+      if (collectionSnapshot.docs.isEmpty) {
+        throw Exception('No documents found in the collection');
       }
-    } while (newLocation == null);
 
-    // Extract data from the randomly selected document
-    LocationModel randomLocation =
-        LocationModel.fromDocumentSnapshot(newLocation);
+      // Find a new unused location
+      DocumentSnapshot? newLocation;
+      do {
+        int randomIndex = Random().nextInt(collectionSnapshot.docs.length);
+        DocumentSnapshot potentialLocation =
+            collectionSnapshot.docs[randomIndex];
+        if (!usedLocations.contains(potentialLocation.id)) {
+          newLocation = potentialLocation;
+        }
+      } while (newLocation == null);
 
-    // Update roomId document with the selected random document ID and increment the current round
-    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
-    // Reset submitted players
-    Map<String, dynamic> submittedPlayersReset = {};
-    Map<String, dynamic>? submittedPlayers = roomData['submittedPlayers'];
-    if (submittedPlayers != null) {
-      submittedPlayers.forEach((playerId, _) {
-        submittedPlayersReset[playerId] = false;
+      // Extract data from the randomly selected document
+      LocationModel randomLocation =
+          LocationModel.fromDocumentSnapshot(newLocation);
+
+      // Update roomId document with the selected random document ID and increment the current round
+      DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+      // Reset submitted players
+      Map<String, dynamic> submittedPlayersReset = {};
+      Map<String, dynamic>? submittedPlayers = roomData['submittedPlayers'];
+      if (submittedPlayers != null) {
+        submittedPlayers.forEach((playerId, _) {
+          submittedPlayersReset[playerId] = false;
+        });
+      }
+      await roomRef.update({
+        'currentTarget': newLocation.id,
+        'usedLocations': FieldValue.arrayUnion([newLocation.id]),
+        'submittedPlayers': submittedPlayersReset,
+        'currentRound': currentRound + 1, // Increment the current round
       });
+
+      // Wait for 3 seconds before notifying listeners
+      await Future.delayed(Duration(seconds: 3));
+
+      // Notify listeners or take any other action you need
+      notifyListeners();
+    } catch (e) {
+      throw e; // Rethrow the exception to propagate it upwards
     }
-    await roomRef.update({
-      'currentTarget': newLocation.id,
-      'usedLocations': FieldValue.arrayUnion([newLocation.id]),
-      'submittedPlayers': submittedPlayersReset,
-      'currentRound': currentRound + 1, // Increment the current round
-    });
-
-    // Wait for 3 seconds before notifying listeners
-    await Future.delayed(Duration(seconds: 3));
-
-    // Notify listeners or take any other action you need
-    notifyListeners();
-  } catch (e) {
-    throw e; // Rethrow the exception to propagate it upwards
   }
-}
-
 }

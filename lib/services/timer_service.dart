@@ -9,6 +9,8 @@ class TimerService extends ChangeNotifier {
   int get timerDuration => _timerDuration;
   bool get timerExpired => _timerExpired;
 
+  
+
   void startTimer() {
     const oneSecond = Duration(seconds: 1);
     _timer?.cancel();
@@ -26,6 +28,7 @@ class TimerService extends ChangeNotifier {
       }
     });
   }
+  
 
   void resetTimer() {
     _timer?.cancel();

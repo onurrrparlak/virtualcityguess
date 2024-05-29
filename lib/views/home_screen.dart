@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_playerName.isNotEmpty) {
       String roomId =
           await _firestoreService.createRoom(_playerName); // Pass host's name
-      await _firestoreService.joinRoom(roomId, _playerName);
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
