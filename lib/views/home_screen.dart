@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/host_lobby_screen.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';
+import 'package:virtualcityguess/views/room_settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -13,27 +14,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String _playerName = '';
   String _roomId = '';
 
-  void _createRoom() async {
-    if (_playerName.isNotEmpty) {
-      String roomId =
-          await _firestoreService.createRoom(_playerName); // Pass host's name
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HostLobbyScreen(
-            roomId: roomId,
-            playerName: _playerName,
-          ),
-        ),
-      );
-    }
-  }
-
   void _joinRoom() async {
     if (_roomId.isNotEmpty && _playerName.isNotEmpty) {
       try {
-        await _firestoreService.joinRoom(_roomId, _playerName);
+        await _firestoreService.joinRoom(context, _roomId, _playerName);
 
         Navigator.pushReplacement(
           context,
@@ -100,7 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 0.1 * screenHeight),
             ElevatedButton(
-              onPressed: _createRoom,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RoomSettingsScreen()),
+                );
+              },
               child: Text('Create Room'),
             ),
             SizedBox(height: 0.05 * screenHeight),

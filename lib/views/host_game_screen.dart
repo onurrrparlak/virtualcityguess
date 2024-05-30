@@ -130,12 +130,14 @@ class _HostGameScreenState extends State<HostGameScreen> {
                   selector: (_, timerService) => timerService.timerExpired,
                   builder: (_, timerExpired, __) {
                     print('Timer Value 1:  $timerExpired');
-                    if (timerExpired) {
+                    print(_currentRound);
+                 
+                 /*   if (timerExpired) {
                     
                       Provider.of<GameService>(context, listen: false)
                           .updateRoundEndedInFirestore(widget.roomId);
                       
-                    }
+                    }*/
                     return Column(
                       children: [
                        

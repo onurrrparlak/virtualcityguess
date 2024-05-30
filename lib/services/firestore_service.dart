@@ -1,22 +1,29 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:virtualcityguess/models/locations.dart';
+import 'package:virtualcityguess/services/timer_service.dart';
 
 class FirestoreService {
+  int _roundDuration = 0;
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String> createRoom(String hostName) async {
+  Future<String> createRoom(BuildContext context,
+      String hostName, int numberOfRounds, int roundDuration) async {
     String roomId = _generateRoomId();
     await _firestore.collection('rooms').doc(roomId).set({
-      'host': hostName, // Include the name of the host
-      'players': {
-        hostName: 0 // Initialize host's score with 0
-      },
+      'host': hostName,
+      'players': {hostName: 0},
+      'numberOfRounds': numberOfRounds,
+      'roundDuration': roundDuration,
       'currentTarget': 0,
       'gameStarted': false,
-      'submittedPlayers': {}, // Initialize submittedPlayers
+      'submittedPlayers': {},
     });
+    Provider.of<TimerService>(context, listen: false).updateTimerDuration(roundDuration);
     return roomId;
   }
 
@@ -35,13 +42,19 @@ class FirestoreService {
     });
   }
 
-  Future<void> joinRoom(String roomId, String playerName) async {
+  Future<void> joinRoom(BuildContext context, roomId, String playerName) async {
     DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
     DocumentSnapshot roomSnapshot = await roomRef.get();
 
     if (!roomSnapshot.exists) {
       throw Exception('Room does not exist');
     }
+
+    _roundDuration = roomSnapshot['roundDuration'];
+
+    Provider.of<TimerService>(context, listen: false).updateTimerDuration(_roundDuration);
+
+   
 
     bool gameStarted = roomSnapshot['gameStarted'];
     if (gameStarted) {
@@ -68,26 +81,27 @@ class FirestoreService {
     }
   }
 
-Future<void> updatePoints(
-    String roomId, String playerName, int points) async {
-  DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
-  await _firestore.runTransaction((transaction) async {
-    DocumentSnapshot roomSnapshot = await transaction.get(roomRef);
-    if (!roomSnapshot.exists) {
-      throw Exception('Room does not exist');
-    }
-    Map<String, dynamic> roomData = roomSnapshot.data() as Map<String, dynamic>;
-    Map<String, dynamic> players = Map<String, dynamic>.from(roomData['players']);
-    if (players.containsKey(playerName)) {
-      // Add points earned in this round to the total points
-      int totalPoints = players[playerName] + points;
-      players[playerName] = totalPoints;
-      // Update total points in Firestore
-      transaction.update(roomRef, {'players.$playerName': totalPoints});
-    }
-  });
-}
-
+  Future<void> updatePoints(
+      String roomId, String playerName, int points) async {
+    DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
+    await _firestore.runTransaction((transaction) async {
+      DocumentSnapshot roomSnapshot = await transaction.get(roomRef);
+      if (!roomSnapshot.exists) {
+        throw Exception('Room does not exist');
+      }
+      Map<String, dynamic> roomData =
+          roomSnapshot.data() as Map<String, dynamic>;
+      Map<String, dynamic> players =
+          Map<String, dynamic>.from(roomData['players']);
+      if (players.containsKey(playerName)) {
+        // Add points earned in this round to the total points
+        int totalPoints = players[playerName] + points;
+        players[playerName] = totalPoints;
+        // Update total points in Firestore
+        transaction.update(roomRef, {'players.$playerName': totalPoints});
+      }
+    });
+  }
 
   Future<List<MapEntry<String, int>>> fetchAndSortPlayersByPoints(
       String roomId) async {
@@ -156,7 +170,6 @@ Future<void> updatePoints(
 
 // Add a new function to check if all players have submitted their locations
 
-
   Stream<DocumentSnapshot> getRoomStream(String roomId) {
     return _firestore.collection('rooms').doc(roomId).snapshots();
   }
@@ -172,6 +185,4 @@ Future<void> updatePoints(
       List.generate(10, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
     );
   }
-
-  
 }

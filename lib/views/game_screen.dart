@@ -28,27 +28,23 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   static int _buildCount = 0;
-  late Timer _timer;
 
+@override
+void initState() {
+  super.initState();
 
-  @override
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final timerService = Provider.of<TimerService>(context, listen: false);
-      timerService.startTimer();
-
-  
-
-    });
-
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final timerService = Provider.of<TimerService>(context, listen: false);
     final gameService = Provider.of<GameService>(context, listen: false);
     gameService.listenToRoomUpdates(context, widget.roomId);
-
     
-  }
+
+    // Start the timer with the timerDuration from TimerService
+    timerService.startTimer();
+  });
+}
+
+
 
 
 
@@ -122,19 +118,19 @@ class _GameScreenState extends State<GameScreen> {
                   builder: (_, timerExpired, __) {
                     return Column(
                       children: [
-                         if (Provider.of<GameService>(context).gameShouldEnd)
+                        /* if (Provider.of<GameService>(context).gameShouldEnd)
                           ElevatedButton(
                             onPressed: () async {
                               // Navigate to the game result screen
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => GameResultsScreen(),
+                                  builder: (context) => GameResultsScreen(roomId: roomId,),
                                 ),
                               );
                             },
                             child: Text('End The Game'),
-                          ),
+                          ),*/
                        
                         ElevatedButton(
                           onPressed: () {
