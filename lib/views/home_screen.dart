@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/host_lobby_screen.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';
 import 'package:virtualcityguess/views/room_settings_screen.dart';
+import 'package:virtualcityguess/models/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -11,25 +14,30 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  String _playerName = '';
+  final AuthService _authService = AuthService();
   String _roomId = '';
 
+  Future<void> _logout() async {
+    await _authService.signOut(context);
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
   void _joinRoom() async {
-    if (_roomId.isNotEmpty && _playerName.isNotEmpty) {
+    final userModel = Provider.of<UserModel>(context, listen: false);
+    if (_roomId.isNotEmpty && userModel.playerName!.isNotEmpty) {
       try {
-        await _firestoreService.joinRoom(context, _roomId, _playerName);
+        await _firestoreService.joinRoom(context, _roomId, userModel.playerName!);
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => PlayerLobbyScreen(
               roomId: _roomId,
-              currentPlayerName: _playerName,
+              currentPlayerName: userModel.playerName!,
             ),
           ),
         );
       } catch (e) {
-        // Handle the exception here
         print('Error joining room: $e');
         showDialog(
           context: context,
@@ -54,26 +62,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final userModel = Provider.of<UserModel>(context);
+
+    // Check if userModel is null or if the user is not logged in
+  if (userModel == null || userModel.email == null || userModel.email!.isEmpty) {
+    // If not logged in, navigate to the login screen
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      Navigator.pushReplacementNamed(context, '/login');
+    });
+    // Return an empty container or loading indicator while navigating
+    return Container();
+  }
+
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Virtual City Guess'),
-        elevation: 0,
-      ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 0.1 * screenHeight),
+        padding: EdgeInsets.symmetric(horizontal: 0.1 * MediaQuery.of(context).size.height),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              decoration: InputDecoration(labelText: 'Player Name'),
-              onChanged: (value) {
-                setState(() {
-                  _playerName = value;
-                });
-              },
-            ),
-            SizedBox(height: 0.05 * screenHeight),
+            Text('Welcome, ${userModel.playerName}'),
             TextField(
               decoration: InputDecoration(labelText: 'Room ID'),
               onChanged: (value) {
@@ -82,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 });
               },
             ),
-            SizedBox(height: 0.1 * screenHeight),
+            SizedBox(height: 0.1 * MediaQuery.of(context).size.height),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -92,10 +100,17 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: Text('Create Room'),
             ),
-            SizedBox(height: 0.05 * screenHeight),
+            SizedBox(height: 0.05 * MediaQuery.of(context).size.height),
             ElevatedButton(
               onPressed: _joinRoom,
               child: Text('Join Room'),
+            ),
+            ElevatedButton(
+              onPressed: _logout,
+              child: Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+              ),
             ),
           ],
         ),

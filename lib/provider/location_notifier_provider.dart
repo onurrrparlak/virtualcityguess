@@ -8,9 +8,11 @@ class LocationNotifier extends ChangeNotifier {
   LatLng? _currentTargetLocation;
   bool _showLineAndTargetMarker = false;
   bool _locationSubmitted = false;
+  double? _distance;
   LatLngBounds? _mapBounds;
   double _zoomLevel = 10.0; // Default zoom level
-  LatLng _mapCenter = LatLng(0, 0); // Default map center
+  LatLng _mapCenter = LatLng(0, 0); // Default map 
+  int _points = 0;
 
   LatLng get currentLocation => _currentLocation;
   LatLng? get currentTargetLocation => _currentTargetLocation;
@@ -18,7 +20,9 @@ class LocationNotifier extends ChangeNotifier {
   bool get locationSubmitted => _locationSubmitted;
   LatLngBounds? get mapBounds => _mapBounds;
   double get zoomLevel => _zoomLevel;
+  double? get distance => _distance;
   LatLng get mapCenter => _mapCenter;
+  int get points => _points;
 
   void setCurrentLocation(LatLng location) {
     _currentLocation = location;
@@ -29,6 +33,17 @@ class LocationNotifier extends ChangeNotifier {
     notifyListeners();
       print("location submitted$_locationSubmitted");
   }
+
+    void setPoints(int points) {
+    _points = points;
+    notifyListeners();
+  }
+     void setDistance(double distance) {
+    _distance = distance;
+    notifyListeners();
+  }
+
+
 
   
 
@@ -53,8 +68,10 @@ class LocationNotifier extends ChangeNotifier {
     _showLineAndTargetMarker = false;
     _locationSubmitted = false;
     _mapBounds = null;
+    _distance = 0;
     _zoomLevel = 10.0; // or any default zoom level you prefer
     _mapCenter = LatLng(0, 0); // or any default map center you prefer
+    _points = 0;
     notifyListeners();
   }
 

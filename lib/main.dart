@@ -1,14 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
+import 'package:virtualcityguess/views/login_screen.dart';
+import 'package:virtualcityguess/views/register_screen.dart';
 import 'package:virtualcityguess/widgets/custom_dialog_sheet.dart';
 import 'firebase_options.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
@@ -22,6 +26,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   runApp(
     MultiProvider(
       providers: [
@@ -29,6 +34,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TimerService()),
         ChangeNotifierProvider(create: (_) => GameService()),
         ChangeNotifierProvider(create: (_) => LocationNotifier()),
+        ChangeNotifierProvider(create: (_) => UserModel()),
       ],
       child: MyApp(),
     ),
@@ -46,7 +52,12 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Map Guessing Game',
-      home: SafeArea(child: HomeScreen()),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/home': (context) => HomeScreen(),
+      },
     );
   }
 }

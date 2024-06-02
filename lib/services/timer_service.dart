@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 class TimerService extends ChangeNotifier {
   int _timerDuration = 10; // Default value
+  int _defaultDuration = 10; // Default value to reset to
   Timer? _timer;
   bool _timerExpired = false;
 
@@ -11,6 +12,7 @@ class TimerService extends ChangeNotifier {
 
   void updateTimerDuration(int roundDuration) {
     _timerDuration = roundDuration;
+    _defaultDuration = roundDuration; // Update the default duration
   }
 
   void startTimer() {
@@ -34,8 +36,8 @@ class TimerService extends ChangeNotifier {
 
   void resetTimer() {
     print('Girdi $_timerExpired');
-    if (_timerDuration != 10 || _timerExpired) {
-      _timerDuration = 10; // Reset to default value
+    if (_timerDuration != _defaultDuration || _timerExpired) {
+      _timerDuration = _defaultDuration; // Reset to default value
       _timerExpired = false;
       startTimer();
       notifyListeners();

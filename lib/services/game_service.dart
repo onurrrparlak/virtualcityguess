@@ -13,13 +13,14 @@ class GameService with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   int _currentRound = 1;
-
+  bool _allSubmitted = false;
   String? _currentTarget;
   String? _videoUrl;
 
   String? get currentTarget => _currentTarget;
   int? get currentRound => _currentRound;
   String? get videoUrl => _videoUrl;
+  bool get allSubmitted => _allSubmitted;
 
   Future<void> listenToRoomUpdates(BuildContext context, String roomId) async {
     _firestore
@@ -34,28 +35,35 @@ class GameService with ChangeNotifier {
 
         await fetchVideoUrl();
 
-        // Check if 'submittedPlayers' exists and is a list
-        List<dynamic> submittedPlayers = [];
+        // Check if 'submittedPlayers' exists and is a map
+        Map<String, dynamic> submittedPlayersData = {};
         if (data.containsKey('submittedPlayers') &&
-            data['submittedPlayers'] is List) {
-          submittedPlayers = data['submittedPlayers'];
+            data['submittedPlayers'] is Map) {
+          submittedPlayersData = data['submittedPlayers'];
         }
 
-        // Check if 'players' exists and is a list
-        List<dynamic> players = [];
-        if (data.containsKey('players') && data['players'] is List) {
-          players = data['players'];
+        // Convert submittedPlayersData to Map<String, bool>
+        Map<String, bool> submittedPlayers = {};
+        submittedPlayersData.forEach((key, value) {
+          submittedPlayers[key] = value as bool;
+        });
+
+        // Check if all players have submitted
+        bool allSubmitted = await checkAllPlayersSubmitted(submittedPlayers);
+
+        // Handle action if all players have submitted
+        if (allSubmitted) {
+          // Do something when all players have submitted
+          _allSubmitted = allSubmitted;
+          print('All players have submitted!');
+        } else {
+          // Do something else if not all players have submitted yet
+          print('Not all players have submitted yet');
         }
 
-        if (submittedPlayers.length == players.length && players.isNotEmpty) {}
-
-
-        
         int newRound = data['currentRound'];
-        print(newRound);
+
         if (newRound != _currentRound) {
-          print('yeniround: $newRound');
-          print('şuanki round: $_currentRound');
           _currentRound = newRound;
           // Reset location submission
           Provider.of<LocationNotifier>(context, listen: false)
@@ -68,12 +76,14 @@ class GameService with ChangeNotifier {
         }
 
         // Check if gameStarted changed to false
-          bool gameEnded = data['gameEnded'] ?? false;
+        bool gameEnded = data['gameEnded'] ?? false;
         if (gameEnded) {
           // Navigate to game result screen
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => GameResultsScreen(roomId: roomId,),
+              builder: (context) => GameResultsScreen(
+                roomId: roomId,
+              ),
             ),
           );
         }
@@ -81,24 +91,13 @@ class GameService with ChangeNotifier {
     });
   }
 
-
-
-  Future<bool> checkAllPlayersSubmitted(String roomId) async {
-    DocumentSnapshot roomSnapshot =
-        await _firestore.collection('rooms').doc(roomId).get();
-    if (!roomSnapshot.exists) {
-      throw Exception('Room does not exist');
-    }
-    Map<String, dynamic> submittedPlayers =
-        Map<String, dynamic>.from(roomSnapshot['submittedPlayers']);
-    if (submittedPlayers.length == 0) {
+  Future<bool> checkAllPlayersSubmitted(
+      Map<String, bool> submittedPlayers) async {
+    if (submittedPlayers.isEmpty) {
       return false; // No players have submitted
     }
     bool allSubmitted =
         submittedPlayers.values.every((submitted) => submitted == true);
-
-    notifyListeners();
-
     return allSubmitted;
   }
 
@@ -276,6 +275,8 @@ class GameService with ChangeNotifier {
         'submittedPlayers': submittedPlayersReset,
         'currentRound': currentRound + 1, // Increment the current round
       });
+      _allSubmitted = false;
+
 
       // Wait for 3 seconds before notifying listeners
       await Future.delayed(Duration(seconds: 3));

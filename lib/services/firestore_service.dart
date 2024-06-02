@@ -95,7 +95,9 @@ class FirestoreService {
           Map<String, dynamic>.from(roomData['players']);
       if (players.containsKey(playerName)) {
         // Add points earned in this round to the total points
+     
         int totalPoints = players[playerName] + points;
+     
         players[playerName] = totalPoints;
         // Update total points in Firestore
         transaction.update(roomRef, {'players.$playerName': totalPoints});

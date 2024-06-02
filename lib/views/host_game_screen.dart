@@ -26,7 +26,6 @@ class HostGameScreen extends StatefulWidget {
 
 class _HostGameScreenState extends State<HostGameScreen> {
   static int _buildCount = 0;
-  bool _allPlayersSubmitted = false;
 
   @override
   @override
@@ -36,29 +35,10 @@ class _HostGameScreenState extends State<HostGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final timerService = Provider.of<TimerService>(context, listen: false);
       timerService.startTimer();
-
-      void startTimer() {
-        Timer timer = Timer.periodic(Duration(seconds: 5), (Timer t) {
-          if (timerService.timerDuration <= 0) {
-            t.cancel(); // Cancel the timer if the condition is no longer met
-          } else {
-            checkAllPlayersSubmitted();
-          }
-        });
-      }
     });
 
     final gameService = Provider.of<GameService>(context, listen: false);
     gameService.listenToRoomUpdates(context, widget.roomId);
-  }
-
-  Future<void> checkAllPlayersSubmitted() async {
-    final gameService = Provider.of<GameService>(context, listen: false);
-    final allSubmitted =
-        await gameService.checkAllPlayersSubmitted(widget.roomId);
-    setState(() {
-      _allPlayersSubmitted = allSubmitted;
-    });
   }
 
   @override
@@ -68,7 +48,7 @@ class _HostGameScreenState extends State<HostGameScreen> {
 
     _buildCount++; // Increment build count
     print('build sayısı $_buildCount');
-   
+
     print(_currentRound);
 
     return Scaffold(
@@ -129,10 +109,12 @@ class _HostGameScreenState extends State<HostGameScreen> {
                 child: Selector<TimerService, bool>(
                   selector: (_, timerService) => timerService.timerExpired,
                   builder: (_, timerExpired, __) {
-                    print('Timer Value 1:  $timerExpired');
-                    print(_currentRound);
-                 
-                 /*   if (timerExpired) {
+                    bool _allSubmitted =
+                        Provider.of<GameService>(context).allSubmitted;
+                          print('Süre: $timerExpired');
+                          print('Herkes: $_allSubmitted');
+                    //   print('Timer Value 1:  $timerExpired');
+                    /*   if (timerExpired) {
                     
                       Provider.of<GameService>(context, listen: false)
                           .updateRoundEndedInFirestore(widget.roomId);
@@ -140,15 +122,15 @@ class _HostGameScreenState extends State<HostGameScreen> {
                     }*/
                     return Column(
                       children: [
-                       
-                        if (timerExpired || _allPlayersSubmitted)
+                      
+                        if (timerExpired || _allSubmitted)
                           ElevatedButton(
                             onPressed: () async {
-                            //  print('Timer Value 2 : $timerExpired');
+                              //  print('Timer Value 2 : $timerExpired');
                               final gameService = Provider.of<GameService>(
                                   context,
                                   listen: false);
-                             /* Provider.of<TimerService>(context, listen: false)
+                              /* Provider.of<TimerService>(context, listen: false)
                                   .resetTimer();*/
                               await gameService.nextRound(widget.roomId);
                             },
