@@ -19,16 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserModel>(context);
 
-    if (userModel != null &&
-        userModel.email != null &&
-        userModel.email!.isNotEmpty) {
-      // If logged in, navigate to the home screen
-      WidgetsBinding.instance!.addPostFrameCallback((_) {
-        Navigator.pushReplacementNamed(context, '/home');
-      });
-      // Return an empty container or loading indicator while navigating
-      return Container();
-    }
 
     return Scaffold(
       body: Padding(

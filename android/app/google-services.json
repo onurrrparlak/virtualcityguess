@@ -12,7 +12,20 @@
           "package_name": "com.wivizo.virtualcityguess"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "257206606371-v34ptse9bsm76mp3paef5e3bru17imje.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wivizo.virtualcityguess",
+            "certificate_hash": "4231b997148cec99b74a32394be8ff9fe805da4f"
+          }
+        },
+        {
+          "client_id": "257206606371-64qq575g32uqmictlvq4t2l1ordh0gnf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCsnBJU8ndzaUc3WAhuYhdjUpoaPmT5pbI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "257206606371-64qq575g32uqmictlvq4t2l1ordh0gnf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "257206606371-ic0bmit14bv68obomrf6cd7fr8b0ophs.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.virtualcityguess"
+              }
+            }
+          ]
         }
       }
     }

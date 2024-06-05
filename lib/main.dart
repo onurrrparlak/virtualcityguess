@@ -1,32 +1,36 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
-import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 import 'package:virtualcityguess/views/login_screen.dart';
 import 'package:virtualcityguess/views/register_screen.dart';
-import 'package:virtualcityguess/widgets/custom_dialog_sheet.dart';
 import 'firebase_options.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/home_screen.dart';
-import 'package:virtualcityguess/widgets/videoplayer.dart';
-import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Ensure Flutter binding is initialized
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+  if (kIsWeb) {
+    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+  }
+
+  await Hive.initFlutter();
+  Hive.registerAdapter(UserModelAdapter());
+  await Hive.openBox<UserModel>('userBox');
+  
+  // Load user data from Hive
+  Box<UserModel> userBox = await Hive.openBox<UserModel>('userBox');
+  UserModel userModel = userBox.get('user') ?? UserModel(); // Get user data from Hive or create a new instance
+
   runApp(
     MultiProvider(
       providers: [
@@ -34,16 +38,22 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TimerService()),
         ChangeNotifierProvider(create: (_) => GameService()),
         ChangeNotifierProvider(create: (_) => LocationNotifier()),
-        ChangeNotifierProvider(create: (_) => UserModel()),
+        ChangeNotifierProvider.value(value: userModel), // Provide the loaded userModel
       ],
-      child: MyApp(),
+      child: MyApp(userModel: userModel),
     ),
   );
 }
 
+
+
 class MyApp extends StatefulWidget {
+  final UserModel userModel;
+
+  MyApp({required this.userModel});
+
   @override
-  State<MyApp> createState() => _MyAppState();
+  _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
@@ -52,7 +62,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Map Guessing Game',
-      initialRoute: '/login',
+      initialRoute: widget.userModel.email != null ? '/home' : '/login',
       routes: {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),

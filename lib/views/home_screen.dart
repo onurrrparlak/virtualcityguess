@@ -26,7 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final userModel = Provider.of<UserModel>(context, listen: false);
     if (_roomId.isNotEmpty && userModel.playerName!.isNotEmpty) {
       try {
-        await _firestoreService.joinRoom(context, _roomId, userModel.playerName!);
+        await _firestoreService.joinRoom(
+            context, _roomId, userModel.playerName!);
 
         Navigator.pushReplacement(
           context,
@@ -63,21 +64,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserModel>(context);
-
-    // Check if userModel is null or if the user is not logged in
-  if (userModel == null || userModel.email == null || userModel.email!.isEmpty) {
-    // If not logged in, navigate to the login screen
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
-      Navigator.pushReplacementNamed(context, '/login');
-    });
-    // Return an empty container or loading indicator while navigating
-    return Container();
-  }
-
+    print('Email: ${userModel.email}');
+    print('Player Name: ${userModel.playerName}');
+    print('Rating: ${userModel.rating}');
+    print('Premium: ${userModel.premium}');
 
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 0.1 * MediaQuery.of(context).size.height),
+        padding: EdgeInsets.symmetric(
+            horizontal: 0.1 * MediaQuery.of(context).size.height),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

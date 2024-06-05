@@ -1,33 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
+part 'user_model.g.dart';
+
+@HiveType(typeId: 0)
 class UserModel with ChangeNotifier {
+  @HiveField(0)
   String? email;
+  @HiveField(1)
   String? playerName;
+  @HiveField(2)
   int? rating;
+  @HiveField(3)
   bool? premium;
 
-  UserModel({this.email, this.playerName, this.rating, this.premium});
+    UserModel({this.email, this.playerName, this.rating, this.premium}) {
+    // Set default values to null if not provided
+    this.email ??= null;
+    this.playerName ??= null;
+    this.rating ??= null;
+    this.premium ??= null;
+  }
 
-  void setUser(String email, String playerName, int rating, bool premium) {
+  Box<UserModel>? _userBox;
+
+  Future<void> _openBox() async {
+    _userBox = await Hive.openBox<UserModel>('userBox');
+  }
+
+  
+
+  Future<void> setUser(String email, String playerName, int rating, bool premium) async {
     this.email = email;
     this.playerName = playerName;
     this.rating = rating;
     this.premium = premium;
+    await _saveToHive();
     notifyListeners();
   }
 
-  void updatePlayerName(String playerName) {
+  Future<void> updatePlayerName(String playerName) async {
     this.playerName = playerName;
+    await _saveToHive();
     notifyListeners();
   }
 
-  void updateRating(int rating) {
+  Future<void> updateRating(int rating) async {
     this.rating = rating;
+    await _saveToHive();
     notifyListeners();
   }
 
-  void updatePremium(bool premium) {
+  Future<void> updatePremium(bool premium) async {
     this.premium = premium;
+    await _saveToHive();
     notifyListeners();
+  }
+
+  Future<void> _saveToHive() async {
+    if (_userBox == null) {
+      await _openBox();
+    }
+    _userBox?.put('user', this);
+  }
+
+  Future<void> loadFromHive() async {
+    await _openBox();
+    UserModel? userModel = _userBox?.get('user');
+    if (userModel != null) {
+      this.email = userModel.email;
+      this.playerName = userModel.playerName;
+      this.rating = userModel.rating;
+      this.premium = userModel.premium;
+      notifyListeners();
+    }
   }
 }
