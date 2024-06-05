@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
+import 'package:virtualcityguess/views/edit_profile.dart';
 import 'package:virtualcityguess/views/host_lobby_screen.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';
 import 'package:virtualcityguess/views/room_settings_screen.dart';
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await _authService.signOut(context);
     Navigator.pushReplacementNamed(context, '/login');
   }
+
 
   void _joinRoom() async {
     final userModel = Provider.of<UserModel>(context, listen: false);
@@ -99,6 +101,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ElevatedButton(
               onPressed: _joinRoom,
               child: Text('Join Room'),
+            ),
+             ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => EditProfilePage()),
+            );
+              },
+              child: Text('Edit Profile'),
+              
             ),
             ElevatedButton(
               onPressed: _logout,

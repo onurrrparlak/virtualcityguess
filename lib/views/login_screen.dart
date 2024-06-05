@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                try {
+try {
                   final result = await _auth.signInWithGoogle(context);
                   User? user = result['user'];
                   bool isNewUser = result['isNewUser'];
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => PlayerNameScreen(user: user)),
+                            builder: (context) => PlayerNameScreen(user: user, userModel: userModel,)),
                       );
                     } else {
                       print("Logged in with Google");

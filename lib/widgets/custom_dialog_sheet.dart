@@ -57,6 +57,18 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
           children: [
             Column(
               children: [
+                  if (locationNotifier.locationSubmitted)
+                  Container(color: Colors.white,
+                    child: Column(
+                      children: [
+                        Text('This round points: ${locationNotifier.points}'),
+                        Text(
+                          'You are ${locationNotifier.distance?.toStringAsFixed(2)} km away from the location',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: FlutterMap(
                     mapController: _mapController,
@@ -239,16 +251,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                       ),
                     ),
                   ),
-                if (locationNotifier.locationSubmitted)
-                  Column(
-                    children: [
-                      Text('This round points: ${locationNotifier.points}'),
-                      Text(
-                        'You are ${distanceInKm?.toStringAsFixed(2)} km away from the location',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
+              
               ],
             ),
             Positioned(

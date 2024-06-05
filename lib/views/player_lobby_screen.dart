@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -88,47 +87,52 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                     });
                   }
 
-                  if (joinedPlayers.contains(hostName)) {
-                    joinedPlayers.remove(hostName);
-                    joinedPlayers.insert(0, hostName);
-                  }
+                  // Ensure the host is at the top and the current player is second
+                  joinedPlayers.remove(hostName);
+                  joinedPlayers.remove(widget.currentPlayerName);
+
+                  joinedPlayers.insert(0, hostName);
+                  joinedPlayers.insert(1, widget.currentPlayerName);
 
                   return Column(
                     children: [
                       Expanded(
                         flex: 7,
-                        child: ListView.builder(
-                          itemCount: joinedPlayers.length,
-                          itemBuilder: (context, index) {
-                            String playerName = joinedPlayers[index];
-                            bool isHost = playerName == hostName;
+                        child: Scrollbar(
+                          child: ListView.builder(
+                            itemCount: joinedPlayers.length,
+                            itemBuilder: (context, index) {
+                              String playerName = joinedPlayers[index];
+                              bool isHost = playerName == hostName;
 
-                            return ListTile(
-                              title: Text(playerName),
-                              trailing: isHost
-                                  ? Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.circle, color: Colors.green),
-                                        SizedBox(width: 5),
-                                        Text('(Host)',
-                                            style:
-                                                TextStyle(color: Colors.green)),
-                                      ],
-                                    )
-                                  : Text(
-                                      playerName == widget.currentPlayerName
-                                          ? 'You'
-                                          : 'Player',
-                                      style: TextStyle(
-                                        color: playerName ==
-                                                widget.currentPlayerName
-                                            ? Colors.blue
-                                            : null,
+                              return ListTile(
+                                title: Text(playerName),
+                                trailing: isHost
+                                    ? Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.circle,
+                                              color: Colors.green),
+                                          SizedBox(width: 5),
+                                          Text('(Host)',
+                                              style: TextStyle(
+                                                  color: Colors.green)),
+                                        ],
+                                      )
+                                    : Text(
+                                        playerName == widget.currentPlayerName
+                                            ? 'You'
+                                            : 'Player',
+                                        style: TextStyle(
+                                          color: playerName ==
+                                                  widget.currentPlayerName
+                                              ? Colors.blue
+                                              : null,
+                                        ),
                                       ),
-                                    ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       ),
                       Expanded(

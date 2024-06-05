@@ -95,15 +95,13 @@ class AuthService {
     }
   }
 
+
+
   // Sign in with Google
   Future<Map<String, dynamic>> signInWithGoogle(BuildContext context) async {
     try {
       print('Attempting Google sign-in...');
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        clientId:
-            '257206606371-64qq575g32uqmictlvq4t2l1ordh0gnf.apps.googleusercontent.com',
-      
-      );
+      final GoogleSignIn googleSignIn = GoogleSignIn();
 
       print('Starting Google sign-in process...');
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
