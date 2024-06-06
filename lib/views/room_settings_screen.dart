@@ -10,35 +10,39 @@ class RoomSettingsScreen extends StatefulWidget {
   @override
   _RoomSettingsScreenState createState() => _RoomSettingsScreenState();
 }
-
 class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final String _roomId = '';
   bool _isButtonEnabled = true;
   int _numberOfRounds = 1;
   int _timerDuration = 30;
+  bool _isPrivateRoom = false; // Add this line
 
-  void _createRoom() async {
-    final userModel = Provider.of<UserModel>(context, listen: false);
-    if (userModel.playerName != null && userModel.playerName!.isNotEmpty) {
-      String roomId = await _firestoreService.createRoom(
-        context,
-        userModel.playerName!,
-        _numberOfRounds,
-        _timerDuration,
-      );
+void _createRoom() async {
+  final userModel = Provider.of<UserModel>(context, listen: false);
+  if (userModel.playerName != null && userModel.playerName!.isNotEmpty) {
+    String roomId = await _firestoreService.createRoom(
+      context,
+      userModel.playerName!,
+      _numberOfRounds,
+      _timerDuration,
+      _isPrivateRoom ? true : null, // Pass true only if _isPrivateRoom is true
+    );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HostLobbyScreen(
-            roomId: roomId,
-            playerName: userModel.playerName!,
-          ),
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HostLobbyScreen(
+          roomId: roomId,
+          playerName: userModel.playerName!,
         ),
-      );
-    }
+      ),
+    );
   }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +85,21 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                   child: Text('$duration Seconds'),
                 );
               }).toList(),
+            ),
+            SizedBox(height: 0.05 * screenHeight), // Adjust the spacing
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Make Room Private'),
+                Checkbox(
+                  value: _isPrivateRoom,
+                  onChanged: (value) {
+                    setState(() {
+                      _isPrivateRoom = value!;
+                    });
+                  },
+                ),
+              ],
             ),
             SizedBox(height: 0.1 * screenHeight),
             ElevatedButton(

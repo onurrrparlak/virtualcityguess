@@ -19,6 +19,15 @@ class HostLobbyScreen extends StatefulWidget {
 
 class _HostLobbyScreenState extends State<HostLobbyScreen> {
   bool _isButtonDisabled = false;
+
+
+     @override
+void dispose() {
+  print('Dispose called');
+  FirestoreService().deleteRoom(widget.roomId);
+  super.dispose();
+}
+
   void _startGame(BuildContext context) async {
     await GameService().startGame(widget.roomId);
 

@@ -10,10 +10,11 @@ class FirestoreService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String> createRoom(BuildContext context,
-      String hostName, int numberOfRounds, int roundDuration) async {
+ Future<String> createRoom(BuildContext context, String hostName,
+      int numberOfRounds, int roundDuration, bool? privateRoom) async {
+    // Add privateRoom parameter
     String roomId = _generateRoomId();
-    await _firestore.collection('rooms').doc(roomId).set({
+    Map<String, dynamic> data = {
       'host': hostName,
       'players': {hostName: 0},
       'numberOfRounds': numberOfRounds,
@@ -21,10 +22,19 @@ class FirestoreService {
       'currentTarget': 0,
       'gameStarted': false,
       'submittedPlayers': {},
-    });
-    Provider.of<TimerService>(context, listen: false).updateTimerDuration(roundDuration);
+    };
+
+    // Only add 'privateRoom' field if privateRoom is not null
+    if (privateRoom != null) {
+      data['privateRoom'] = privateRoom;
+    }
+
+    await _firestore.collection('rooms').doc(roomId).set(data);
+    Provider.of<TimerService>(context, listen: false)
+        .updateTimerDuration(roundDuration);
     return roomId;
-  }
+}
+
 
   Future<void> kickPlayer(String roomId, String playerName) async {
     DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
@@ -51,9 +61,8 @@ class FirestoreService {
 
     _roundDuration = roomSnapshot['roundDuration'];
 
-    Provider.of<TimerService>(context, listen: false).updateTimerDuration(_roundDuration);
-
-   
+    Provider.of<TimerService>(context, listen: false)
+        .updateTimerDuration(_roundDuration);
 
     bool gameStarted = roomSnapshot['gameStarted'];
     if (gameStarted) {
@@ -94,9 +103,9 @@ class FirestoreService {
           Map<String, dynamic>.from(roomData['players']);
       if (players.containsKey(playerName)) {
         // Add points earned in this round to the total points
-     
+
         int totalPoints = players[playerName] + points;
-     
+
         players[playerName] = totalPoints;
         // Update total points in Firestore
         transaction.update(roomRef, {'players.$playerName': totalPoints});
@@ -186,4 +195,30 @@ class FirestoreService {
       List.generate(10, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
     );
   }
+
+  
+Future<List<Map<String, dynamic>>> fetchAvailableRooms() async {
+  QuerySnapshot snapshot = await _firestore
+      .collection('rooms')
+      .where('gameStarted', isEqualTo: false)
+      .get();
+
+  List<Map<String, dynamic>> availableRooms = snapshot.docs
+      .map((doc) {
+        Map<String, dynamic> roomData = doc.data() as Map<String, dynamic>;
+        roomData['roomId'] = doc.id; // Add the document ID to the room data
+        // Check if privateRoom field exists and is true
+        if (roomData.containsKey('privateRoom') && roomData['privateRoom'] == true) {
+          // Skip adding this room to the list
+          return null;
+        }
+        return roomData;
+      })
+      .whereType<Map<String, dynamic>>() // Filter out null values
+      .toList();
+
+  return availableRooms;
+}
+
+
 }

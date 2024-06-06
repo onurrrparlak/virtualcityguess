@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
+import 'package:virtualcityguess/views/custom_room_screen.dart';
 import 'package:virtualcityguess/views/edit_profile.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';
 import 'package:virtualcityguess/views/room_settings_screen.dart';
@@ -23,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await _authService.signOut(context);
     Navigator.pushReplacementNamed(context, '/login');
   }
-
 
   void _joinRoom() async {
     final userModel = Provider.of<UserModel>(context, listen: false);
@@ -93,25 +93,36 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RoomSettingsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const RoomSettingsScreen()),
                 );
               },
               child: const Text('Create Room'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const CustomRoomsScreen()),
+                );
+              },
+              child: const Text('Custom Rooms'),
             ),
             SizedBox(height: 0.05 * MediaQuery.of(context).size.height),
             ElevatedButton(
               onPressed: _joinRoom,
               child: const Text('Join Room'),
             ),
-             ElevatedButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const EditProfilePage()),
-            );
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const EditProfilePage()),
+                );
               },
               child: const Text('Edit Profile'),
-              
             ),
             ElevatedButton(
               onPressed: _logout,
