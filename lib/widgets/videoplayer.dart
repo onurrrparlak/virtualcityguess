@@ -5,7 +5,7 @@ import 'package:chewie/chewie.dart';
 class VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
 
-  VideoPlayerWidget({required this.videoUrl});
+  const VideoPlayerWidget({super.key, required this.videoUrl});
 
   @override
   _VideoPlayerWidgetState createState() => _VideoPlayerWidgetState();
@@ -55,7 +55,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             fullScreenByDefault: _isFullScreen,
             customControls: Container(
               child: IconButton(
-                icon: Icon(Icons.fullscreen),
+                icon: const Icon(Icons.fullscreen),
                 onPressed: () {
                   setState(() {
                     _isFullScreen = !_isFullScreen;
@@ -85,7 +85,7 @@ Widget build(BuildContext context) {
           aspectRatio: _chewieController!.videoPlayerController.value.aspectRatio,
           child: Chewie(controller: _chewieController!),
         )
-      : Center(
+      : const Center(
           child: CircularProgressIndicator(),
         );
 }

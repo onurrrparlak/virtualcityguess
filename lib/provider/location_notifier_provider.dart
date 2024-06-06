@@ -4,14 +4,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 class LocationNotifier extends ChangeNotifier {
-  LatLng _currentLocation = LatLng(0, 0);
+  LatLng _currentLocation = const LatLng(0, 0);
   LatLng? _currentTargetLocation;
   bool _showLineAndTargetMarker = false;
   bool _locationSubmitted = false;
   double? _distance;
   LatLngBounds? _mapBounds;
   double _zoomLevel = 10.0; // Default zoom level
-  LatLng _mapCenter = LatLng(0, 0); // Default map 
+  LatLng _mapCenter = const LatLng(0, 0); // Default map 
   int _points = 0;
 
   LatLng get currentLocation => _currentLocation;
@@ -29,7 +29,7 @@ class LocationNotifier extends ChangeNotifier {
     notifyListeners();
   }
     void resetCurrentLocation() {
-   _currentLocation = LatLng(0, 0);
+   _currentLocation = const LatLng(0, 0);
     notifyListeners();
       print("location submitted$_locationSubmitted");
   }
@@ -64,13 +64,13 @@ class LocationNotifier extends ChangeNotifier {
   }
 
    void resetMapState() {
-    _currentLocation = LatLng(0, 0);
+    _currentLocation = const LatLng(0, 0);
     _showLineAndTargetMarker = false;
     _locationSubmitted = false;
     _mapBounds = null;
     _distance = 0;
     _zoomLevel = 10.0; // or any default zoom level you prefer
-    _mapCenter = LatLng(0, 0); // or any default map center you prefer
+    _mapCenter = const LatLng(0, 0); // or any default map center you prefer
     _points = 0;
     notifyListeners();
   }

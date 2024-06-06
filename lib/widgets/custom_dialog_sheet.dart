@@ -12,7 +12,7 @@ class CustomDialogSheet extends StatefulWidget {
   final String roomId;
   final String playerName;
 
-  const CustomDialogSheet({
+  const CustomDialogSheet({super.key, 
     required this.roomId,
     required this.playerName,
   });
@@ -50,7 +50,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
         borderRadius: BorderRadius.circular(15),
       ),
       backgroundColor: Colors.transparent,
-      child: Container(
+      child: SizedBox(
         height: MediaQuery.of(context).size.height * 0.8,
         width: MediaQuery.of(context).size.width * 0.8,
         child: Stack(
@@ -64,7 +64,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                         Text('This round points: ${locationNotifier.points}'),
                         Text(
                           'You are ${locationNotifier.distance?.toStringAsFixed(2)} km away from the location',
-                          style: TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ],
                     ),
@@ -112,7 +112,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                               point: locationNotifier.currentLocation,
                               width: 80,
                               height: 80,
-                              child: Icon(
+                              child: const Icon(
                                 Icons.location_on,
                                 color: Colors.red,
                                 size: 30,
@@ -153,7 +153,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                 if (!locationNotifier.locationSubmitted)
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
                     child: ElevatedButton(
                       onPressed: _buttonClicked
                           ? null
@@ -191,7 +191,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                                     );
                                   }
 
-                                  final distance = Distance().as(
+                                  final distance = const Distance().as(
                                     LengthUnit.Meter,
                                     locationNotifier.currentLocation,
                                     locationNotifier.currentTargetLocation!,
@@ -258,12 +258,12 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
               top: 10,
               right: 10,
               child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   color: Colors.black,
                   onPressed: () {
                     Navigator.of(context).pop();

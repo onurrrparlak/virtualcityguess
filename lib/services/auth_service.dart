@@ -6,8 +6,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/models/user_model.dart';
-import 'dart:io' show Platform;
-
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -21,11 +19,9 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // Register with email and password
-  Future<User?> registerWithEmailAndPassword(BuildContext context, String email,
-      String password, String playerName) async {
+  Future<User?> registerWithEmailAndPassword(BuildContext context, String email, String password, String playerName) async {
     try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
+      UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set({
@@ -36,8 +32,7 @@ class AuthService {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        Provider.of<UserModel>(context, listen: false)
-            .setUser(email, playerName, 1000, false); // Set user data locally
+        Provider.of<UserModel>(context, listen: false).setUser(email, playerName, 1000, false); // Set user data locally
 
         await user.sendEmailVerification();
       }
@@ -48,16 +43,19 @@ class AuthService {
     }
   }
 
+  // Check if player name is already taken
+  Future<bool> isPlayerNameAvailable(String playerName) async {
+    final result = await _firestore.collection('users').where('playerName', isEqualTo: playerName).get();
+    return result.docs.isEmpty;
+  }
+
   // Sign in with email and password
-  Future<User?> signInWithEmailAndPassword(
-      BuildContext context, String email, String password) async {
+  Future<User?> signInWithEmailAndPassword(BuildContext context, String email, String password) async {
     try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
+      UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
       if (user != null && user.emailVerified) {
-        DocumentSnapshot userData =
-            await _firestore.collection('users').doc(user.uid).get();
+        DocumentSnapshot userData = await _firestore.collection('users').doc(user.uid).get();
         Provider.of<UserModel>(context, listen: false).setUser(
           userData['email'],
           userData['playerName'],
@@ -71,8 +69,8 @@ class AuthService {
             code: 'email-not-verified',
             message: 'Please verify your email to log in.');
       }
-    } on FirebaseAuthException catch (e) {
-      throw e;
+    } on FirebaseAuthException {
+      rethrow;
     } catch (e) {
       throw FirebaseAuthException(
           code: 'invalid-credential',
@@ -84,18 +82,15 @@ class AuthService {
   // Sign out
   Future<void> signOut(BuildContext context) async {
     try {
-      Provider.of<UserModel>(context, listen: false)
-          .setUser('', '', 0, false); // Clear user data locally
-      final _userBox = await Hive.openBox<UserModel>('userBox');
-      await _userBox.clear(); // Clear the Hive box
+      Provider.of<UserModel>(context, listen: false).setUser('', '', 0, false); // Clear user data locally
+      final userBox = await Hive.openBox<UserModel>('userBox');
+      await userBox.clear(); // Clear the Hive box
       await _auth.signOut(); // Sign out the user
       Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
       print(e.toString());
     }
   }
-
-
 
   // Sign in with Google
   Future<Map<String, dynamic>> signInWithGoogle(BuildContext context) async {
@@ -111,8 +106,7 @@ class AuthService {
       }
 
       print('Google sign-in successful, getting authentication...');
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -135,8 +129,7 @@ class AuthService {
       }
 
       print('Fetching user data from Firestore...');
-      DocumentSnapshot userData =
-          await _firestore.collection('users').doc(user!.uid).get();
+      DocumentSnapshot userData = await _firestore.collection('users').doc(user!.uid).get();
       Provider.of<UserModel>(context, listen: false).setUser(
         userData['email'],
         userData['playerName'],

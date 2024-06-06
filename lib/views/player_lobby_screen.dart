@@ -9,7 +9,7 @@ class PlayerLobbyScreen extends StatefulWidget {
   final String roomId;
   final String currentPlayerName;
 
-  PlayerLobbyScreen({required this.roomId, required this.currentPlayerName});
+  const PlayerLobbyScreen({super.key, required this.roomId, required this.currentPlayerName});
 
   @override
   State<PlayerLobbyScreen> createState() => _PlayerLobbyScreenState();
@@ -23,10 +23,10 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Player Lobby'),
+        title: const Text('Player Lobby'),
       ),
       body: Container(
-        constraints: BoxConstraints.expand(),
+        constraints: const BoxConstraints.expand(),
         padding: EdgeInsets.all(screenWidth * 0.05),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,11 +40,11 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.copy),
+                  icon: const Icon(Icons.copy),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: widget.roomId));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Room ID copied to clipboard')),
+                      const SnackBar(content: Text('Room ID copied to clipboard')),
                     );
                   },
                 ),
@@ -61,7 +61,7 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                 stream: FirestoreService().getRoomStream(widget.roomId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   Map<String, dynamic> roomData =
@@ -73,7 +73,7 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                   bool gameStarted = roomData['gameStarted'];
                   if (gameStarted) {
                     // Delay for 2 seconds before navigating
-                    Future.delayed(Duration(seconds: 2), () {
+                    Future.delayed(const Duration(seconds: 2), () {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -108,7 +108,7 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                               return ListTile(
                                 title: Text(playerName),
                                 trailing: isHost
-                                    ? Row(
+                                    ? const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(Icons.circle,
@@ -139,8 +139,8 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                         flex: 2,
                         child: Center(
                           child: gameStarted
-                              ? Text('Game starting..')
-                              : Text('Waiting for host to start the game'),
+                              ? const Text('Game starting..')
+                              : const Text('Waiting for host to start the game'),
                         ),
                       )
                     ],

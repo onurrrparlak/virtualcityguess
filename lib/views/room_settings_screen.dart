@@ -3,16 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/host_lobby_screen.dart';
-import 'package:virtualcityguess/views/player_lobby_screen.dart';
 
 class RoomSettingsScreen extends StatefulWidget {
+  const RoomSettingsScreen({super.key});
+
   @override
   _RoomSettingsScreenState createState() => _RoomSettingsScreenState();
 }
 
 class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  String _roomId = '';
+  final String _roomId = '';
   bool _isButtonEnabled = true;
   int _numberOfRounds = 1;
   int _timerDuration = 30;
@@ -89,7 +90,7 @@ class _RoomSettingsScreenState extends State<RoomSettingsScreen> {
                 });
                 _createRoom();
               } : null,
-              child: Text('Create Room'),
+              child: const Text('Create Room'),
             ),
           ],
         ),

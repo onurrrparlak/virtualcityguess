@@ -8,7 +8,7 @@ class GameSidebar extends StatelessWidget {
   final String roomId;
   static int _buildCount = 0;
 
-  GameSidebar({required this.roomId});
+  const GameSidebar({super.key, required this.roomId});
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +27,11 @@ class GameSidebar extends StatelessWidget {
             builder: (context, timerService, child) {
               return Text(
                 'Time Remaining: ${timerService.timerDuration}',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+                style: const TextStyle(color: Colors.white, fontSize: 24),
               );
             },
           ),
-          Center(
+          const Center(
             child: Text(
               'Scoreboard',
               style: TextStyle(color: Colors.white, fontSize: 20),
@@ -43,10 +43,10 @@ class GameSidebar extends StatelessWidget {
               stream: firestoreService.getRoomStream(roomId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.hasError) {
-                  return Center(child: Text('Error loading data'));
+                  return const Center(child: Text('Error loading data'));
                 }
 
                 Map<String, dynamic> data = snapshot.data!.data() as Map<String, dynamic>;
@@ -68,10 +68,10 @@ class GameSidebar extends StatelessWidget {
                         children: [
                           Text(
                             '${player.key}: ${player.value} points',
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
                           if (submitted)
-                            Icon(
+                            const Icon(
                               Icons.check,
                               color: Colors.green,
                             ),

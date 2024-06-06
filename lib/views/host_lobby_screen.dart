@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
-import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/host_game_screen.dart';
 
@@ -12,7 +11,7 @@ class HostLobbyScreen extends StatefulWidget {
   final String roomId;
   final String playerName;
 
-  HostLobbyScreen({required this.roomId, required this.playerName});
+  const HostLobbyScreen({super.key, required this.roomId, required this.playerName});
 
   @override
   State<HostLobbyScreen> createState() => _HostLobbyScreenState();
@@ -47,7 +46,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
 
     return Scaffold(
       body: Container(
-        constraints: BoxConstraints.expand(),
+        constraints: const BoxConstraints.expand(),
         padding: EdgeInsets.all(screenWidth * 0.05),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,11 +60,11 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.copy),
+                  icon: const Icon(Icons.copy),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: widget.roomId));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Room ID copied to clipboard')),
+                      const SnackBar(content: Text('Room ID copied to clipboard')),
                     );
                   },
                 ),
@@ -82,7 +81,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                 stream: FirestoreService().getRoomStream(widget.roomId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   Map<String, dynamic> roomData =
@@ -110,7 +109,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                             return ListTile(
                               title: Text(playerName),
                               trailing: isHost
-                                  ? Row(
+                                  ? const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.circle, color: Colors.green),
@@ -133,7 +132,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                                           child: SizedBox(
                                             width: screenWidth * 0.15,
                                             height: screenHeight * 0.05,
-                                            child: Center(child: Text('Kick')),
+                                            child: const Center(child: Text('Kick')),
                                           ),
                                         ),
                                         SizedBox(width: screenWidth * 0.02),
@@ -146,7 +145,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                                               context: context,
                                               builder: (BuildContext context) {
                                                 return AlertDialog(
-                                                  title: Text('Ban Player'),
+                                                  title: const Text('Ban Player'),
                                                   content: Text(
                                                       'Are you sure you want to ban $playerName?'),
                                                   actions: <Widget>[
@@ -155,7 +154,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                                                         Navigator.of(context)
                                                             .pop(); // Close the dialog
                                                       },
-                                                      child: Text('Cancel'),
+                                                      child: const Text('Cancel'),
                                                     ),
                                                     TextButton(
                                                       onPressed: () {
@@ -165,7 +164,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                                                         Navigator.of(context)
                                                             .pop(); // Close the dialog
                                                       },
-                                                      child: Text('Ban'),
+                                                      child: const Text('Ban'),
                                                     ),
                                                   ],
                                                 );
@@ -175,7 +174,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                                           child: SizedBox(
                                             width: screenWidth * 0.15,
                                             height: screenHeight * 0.05,
-                                            child: Center(child: Text('Ban')),
+                                            child: const Center(child: Text('Ban')),
                                           ),
                                         ),
                                       ],
@@ -198,7 +197,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
                                  
                                 },
                                
-                          child: Text('Start Game'),
+                          child: const Text('Start Game'),
                         ),
                       ),
                     ],

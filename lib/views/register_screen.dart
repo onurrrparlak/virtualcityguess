@@ -1,12 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
-import 'package:virtualcityguess/views/home_screen.dart';
-import 'package:virtualcityguess/views/login_screen.dart';
+
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -23,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-   
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -32,7 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
@@ -48,7 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
+                decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -59,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               TextFormField(
                 controller: _confirmPasswordController,
-                decoration: InputDecoration(labelText: 'Confirm Password'),
+                decoration: const InputDecoration(labelText: 'Confirm Password'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -73,10 +71,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               TextFormField(
                 controller: _playerNameController,
-                decoration: InputDecoration(labelText: 'Player Name'),
+                decoration: const InputDecoration(labelText: 'Player Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your player name';
+                  }
+                  if (value.contains(' ')) {
+                    return 'Player name cannot contain spaces';
+                  }
+                  if (value.length > 32) {
+                    return 'Player name cannot be more than 32 characters';
+                  }
+                  if (value.length < 4){
+                     return 'Player name cannot be less than 4 characters';
                   }
                   return null;
                 },
@@ -88,7 +95,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     String password = _passwordController.text;
                     String playerName = _playerNameController.text;
 
-                    User? user = await _authService.registerWithEmailAndPassword(context,
+                    bool isPlayerNameAvailable = await _authService.isPlayerNameAvailable(playerName);
+                    if (!isPlayerNameAvailable) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Player name already exists')),
+                      );
+                      return;
+                    }
+
+                    User? user = await _authService.registerWithEmailAndPassword(
+                      context,
                       email,
                       password,
                       playerName,
@@ -97,20 +113,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (user != null) {
                       // Registration successful
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Registration successful, please verify your email')),
+                        const SnackBar(content: Text('Registration successful, please verify your email')),
                       );
                     } else {
                       // Registration failed
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Registration failed')),
+                        const SnackBar(content: Text('Registration failed')),
                       );
                     }
                   }
                 },
-                child: Text('Register'),
+                child: const Text('Register'),
               ),
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'By signing up to create an account I accept Terms of use and Privacy Policy',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
                 textAlign: TextAlign.center,

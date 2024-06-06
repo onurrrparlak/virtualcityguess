@@ -1,11 +1,9 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
-import 'package:virtualcityguess/views/game_result.dart';
 import 'package:virtualcityguess/widgets/game_sidebar.dart';
 import 'package:virtualcityguess/widgets/custom_dialog_sheet.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
@@ -16,11 +14,11 @@ class GameScreen extends StatefulWidget {
   final bool isHost;
 
   const GameScreen({
-    Key? key,
+    super.key,
     required this.roomId,
     required this.playerName,
     required this.isHost,
-  }) : super(key: key);
+  });
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -51,12 +49,12 @@ void initState() {
   @override
   Widget build(BuildContext context) {
     final locationNotifier = Provider.of<LocationNotifier>(context);
-      int? _currentRound = Provider.of<GameService>(context).currentRound;
+      int? currentRound = Provider.of<GameService>(context).currentRound;
 
 
     _buildCount++; // Increment build count
    
-    print(_currentRound);
+    print(currentRound);
 
     return Scaffold(
       body: LayoutBuilder(
@@ -90,7 +88,7 @@ void initState() {
                         child: Consumer<GameService>(
                           builder: (context, gameService, child) {
                             if (gameService.currentTarget == null) {
-                              return CircularProgressIndicator();
+                              return const CircularProgressIndicator();
                             }
                             return Column(
                               children: [
@@ -110,7 +108,7 @@ void initState() {
               ),
 
               // Bottom Section with Buttons
-              Container(
+              SizedBox(
                 height: constraints.maxHeight * 0.1,
                 // Add your buttons here
                 child: Selector<TimerService, bool>(
@@ -149,8 +147,8 @@ void initState() {
                                 child) {
                               return locationNotifier.locationSubmitted ||
                                       timerService.timerExpired
-                                  ? Text('Show Results')
-                                  : Text('Guess Location');
+                                  ? const Text('Show Results')
+                                  : const Text('Guess Location');
                             },
                           ),
                         ),

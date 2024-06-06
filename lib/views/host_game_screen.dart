@@ -1,11 +1,9 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
-import 'package:virtualcityguess/views/game_result.dart';
 import 'package:virtualcityguess/widgets/game_sidebar.dart';
 import 'package:virtualcityguess/widgets/custom_dialog_sheet.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
@@ -15,10 +13,10 @@ class HostGameScreen extends StatefulWidget {
   final String playerName;
 
   const HostGameScreen({
-    Key? key,
+    super.key,
     required this.roomId,
     required this.playerName,
-  }) : super(key: key);
+  });
 
   @override
   State<HostGameScreen> createState() => _HostGameScreenState();
@@ -44,12 +42,12 @@ class _HostGameScreenState extends State<HostGameScreen> {
   @override
   Widget build(BuildContext context) {
     final locationNotifier = Provider.of<LocationNotifier>(context);
-    int? _currentRound = Provider.of<GameService>(context).currentRound;
+    int? currentRound = Provider.of<GameService>(context).currentRound;
 
     _buildCount++; // Increment build count
     print('build sayısı $_buildCount');
 
-    print(_currentRound);
+    print(currentRound);
 
     return Scaffold(
       body: LayoutBuilder(
@@ -83,7 +81,7 @@ class _HostGameScreenState extends State<HostGameScreen> {
                         child: Consumer<GameService>(
                           builder: (context, gameService, child) {
                             if (gameService.currentTarget == null) {
-                              return CircularProgressIndicator();
+                              return const CircularProgressIndicator();
                             }
                             return Column(
                               children: [
@@ -103,16 +101,16 @@ class _HostGameScreenState extends State<HostGameScreen> {
               ),
 
               // Bottom Section with Buttons
-              Container(
+              SizedBox(
                 height: constraints.maxHeight * 0.1,
                 // Add your buttons here
                 child: Selector<TimerService, bool>(
                   selector: (_, timerService) => timerService.timerExpired,
                   builder: (_, timerExpired, __) {
-                    bool _allSubmitted =
+                    bool allSubmitted =
                         Provider.of<GameService>(context).allSubmitted;
                           print('Süre: $timerExpired');
-                          print('Herkes: $_allSubmitted');
+                          print('Herkes: $allSubmitted');
                     //   print('Timer Value 1:  $timerExpired');
                     /*   if (timerExpired) {
                     
@@ -123,7 +121,7 @@ class _HostGameScreenState extends State<HostGameScreen> {
                     return Column(
                       children: [
                       
-                        if (timerExpired || _allSubmitted)
+                        if (timerExpired || allSubmitted)
                           ElevatedButton(
                             onPressed: () async {
                               //  print('Timer Value 2 : $timerExpired');
@@ -136,8 +134,8 @@ class _HostGameScreenState extends State<HostGameScreen> {
                             },
                             child: locationNotifier.locationSubmitted ||
                                     timerExpired
-                                ? Text('Next Round')
-                                : Text(''),
+                                ? const Text('Next Round')
+                                : const Text(''),
                           ),
                         ElevatedButton(
                           onPressed: () {
@@ -156,8 +154,8 @@ class _HostGameScreenState extends State<HostGameScreen> {
                                 child) {
                               return locationNotifier.locationSubmitted ||
                                       timerService.timerExpired
-                                  ? Text('Show Results')
-                                  : Text('Guess Location');
+                                  ? const Text('Show Results')
+                                  : const Text('Guess Location');
                             },
                           ),
                         ),

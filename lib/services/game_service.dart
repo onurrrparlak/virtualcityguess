@@ -175,7 +175,7 @@ class GameService with ChangeNotifier {
       });
     } catch (e) {
       print('Error starting game: $e');
-      throw e; // Rethrow the exception to propagate it upwards
+      rethrow; // Rethrow the exception to propagate it upwards
     }
   }
 
@@ -279,12 +279,12 @@ class GameService with ChangeNotifier {
 
 
       // Wait for 3 seconds before notifying listeners
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 3));
 
       // Notify listeners or take any other action you need
       notifyListeners();
     } catch (e) {
-      throw e; // Rethrow the exception to propagate it upwards
+      rethrow; // Rethrow the exception to propagate it upwards
     }
   }
 }

@@ -5,20 +5,20 @@ import 'package:virtualcityguess/services/firestore_service.dart';
 class GameResultsScreen extends StatelessWidget {
   final String roomId;
 
-  GameResultsScreen({required this.roomId});
+  const GameResultsScreen({super.key, required this.roomId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Game Results'),
+        title: const Text('Game Results'),
       ),
       body: FutureBuilder<List<MapEntry<String, int>>>(
         future: Provider.of<FirestoreService>(context)
             .fetchAndSortPlayersByPoints(roomId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(),
             );
           } else if (snapshot.hasError) {
@@ -31,20 +31,20 @@ class GameResultsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'Game Over!',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   // Display ranking with rewards
                   RewardRanking(players: players),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       // Navigate back to home or any other screen
                       Navigator.pop(context);
                     },
-                    child: Text('Back to Home'),
+                    child: const Text('Back to Home'),
                   ),
                 ],
               ),
@@ -59,18 +59,18 @@ class GameResultsScreen extends StatelessWidget {
 class RewardRanking extends StatelessWidget {
   final List<MapEntry<String, int>> players;
 
-  RewardRanking({required this.players});
+  const RewardRanking({super.key, required this.players});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Ranking:',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         // Display player rankings with rewards
         ListView.builder(
           shrinkWrap: true,

@@ -50,7 +50,7 @@ void main() async {
 class MyApp extends StatefulWidget {
   final UserModel userModel;
 
-  MyApp({required this.userModel});
+  const MyApp({super.key, required this.userModel});
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -64,9 +64,9 @@ class _MyAppState extends State<MyApp> {
       title: 'Flutter Map Guessing Game',
       initialRoute: widget.userModel.email != null ? '/home' : '/login',
       routes: {
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/home': (context) => HomeScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/home': (context) => const HomeScreen(),
       },
     );
   }

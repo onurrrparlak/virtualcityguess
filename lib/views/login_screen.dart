@@ -6,6 +6,8 @@ import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/views/player_name_screen.dart'; // Import the PlayerNameScreen
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -27,11 +29,11 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: "Email"),
+              decoration: const InputDecoration(labelText: "Email"),
             ),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: "Password"),
+              decoration: const InputDecoration(labelText: "Password"),
               obscureText: true,
             ),
             ElevatedButton(
@@ -51,12 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(e.message!),
-                      duration: Duration(seconds: 3),
+                      duration: const Duration(seconds: 3),
                     ),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text(
                           "An unexpected error occurred. Please try again later."),
                       duration: Duration(seconds: 3),
@@ -64,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 }
               },
-              child: Text("Login"),
+              child: const Text("Login"),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -91,12 +93,12 @@ try {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(e.message!),
-                      duration: Duration(seconds: 3),
+                      duration: const Duration(seconds: 3),
                     ),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text(
                           "An unexpected error occurred. Please try again later."),
                       duration: Duration(seconds: 3),
@@ -104,13 +106,13 @@ try {
                   );
                 }
               },
-              child: Text("Login with Google"),
+              child: const Text("Login with Google"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/register');
               },
-              child: Text("Don't have an account? Register"),
+              child: const Text("Don't have an account? Register"),
             ),
           ],
         ),

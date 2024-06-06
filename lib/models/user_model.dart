@@ -16,10 +16,10 @@ class UserModel with ChangeNotifier {
 
     UserModel({this.email, this.playerName, this.rating, this.premium}) {
     // Set default values to null if not provided
-    this.email ??= null;
-    this.playerName ??= null;
-    this.rating ??= null;
-    this.premium ??= null;
+    email ??= null;
+    playerName ??= null;
+    rating ??= null;
+    premium ??= null;
   }
 
   Box<UserModel>? _userBox;
@@ -68,10 +68,10 @@ class UserModel with ChangeNotifier {
     await _openBox();
     UserModel? userModel = _userBox?.get('user');
     if (userModel != null) {
-      this.email = userModel.email;
-      this.playerName = userModel.playerName;
-      this.rating = userModel.rating;
-      this.premium = userModel.premium;
+      email = userModel.email;
+      playerName = userModel.playerName;
+      rating = userModel.rating;
+      premium = userModel.premium;
       notifyListeners();
     }
   }
