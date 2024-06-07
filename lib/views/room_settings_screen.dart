@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/host_lobby_screen.dart';
@@ -48,6 +49,7 @@ void _createRoom() async {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final userModel = Provider.of<UserModel>(context);
+     final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Scaffold(
       body: Padding(
@@ -55,7 +57,7 @@ void _createRoom() async {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Player Name: ${userModel.playerName ?? 'Loading...'}'),
+            Text('${appLocalizations!.translate('playername')}: ${userModel.playerName ?? '${appLocalizations.translate('loading')}'}'),
             SizedBox(height: 0.05 * screenHeight),
             DropdownButton<int>(
               value: _numberOfRounds,
@@ -67,7 +69,7 @@ void _createRoom() async {
               items: List.generate(10, (index) => index + 1).map((rounds) {
                 return DropdownMenuItem<int>(
                   value: rounds,
-                  child: Text('$rounds Rounds'),
+                  child: Text('$rounds ${appLocalizations.translate('rounds')}'),
                 );
               }).toList(),
             ),
@@ -82,7 +84,7 @@ void _createRoom() async {
               items: [5, 30, 60, 90].map((duration) {
                 return DropdownMenuItem<int>(
                   value: duration,
-                  child: Text('$duration Seconds'),
+                  child: Text('$duration ${appLocalizations.translate('seconds')}'),
                 );
               }).toList(),
             ),
@@ -90,7 +92,7 @@ void _createRoom() async {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Make Room Private'),
+                Text('${appLocalizations.translate('privateroom')}'),
                 Checkbox(
                   value: _isPrivateRoom,
                   onChanged: (value) {
@@ -109,7 +111,7 @@ void _createRoom() async {
                 });
                 _createRoom();
               } : null,
-              child: const Text('Create Room'),
+              child:  Text('${appLocalizations.translate('createroom')}'),
             ),
           ],
         ),

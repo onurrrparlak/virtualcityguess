@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/services/game_service.dart';
@@ -44,6 +45,7 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
     final locationNotifier = Provider.of<LocationNotifier>(context);
     final timerService = Provider.of<TimerService>(context);
     final timerExpired = timerService.timerExpired;
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -61,9 +63,9 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                   Container(color: Colors.white,
                     child: Column(
                       children: [
-                        Text('This round points: ${locationNotifier.points}'),
+                        Text('${appLocalizations!.translate('thisroundpoints')}}: ${locationNotifier.points}'),
                         Text(
-                          'You are ${locationNotifier.distance?.toStringAsFixed(2)} km away from the location',
+                          '${appLocalizations.translate('youare')} ${locationNotifier.distance?.toStringAsFixed(2)} ${appLocalizations.translate('kmaway')}',
                           style: const TextStyle(fontSize: 16),
                         ),
                       ],
@@ -246,8 +248,8 @@ class _CustomDialogSheetState extends State<CustomDialogSheet> {
                             },
                       child: Text(
                         locationNotifier.locationSubmitted || timerExpired
-                            ? 'Show Results'
-                            : 'Submit Location',
+                            ? '${appLocalizations!.translate('showresults')}'
+                            : '${appLocalizations!.translate('submitlocation')}',
                       ),
                     ),
                   ),

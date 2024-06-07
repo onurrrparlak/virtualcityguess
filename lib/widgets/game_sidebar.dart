@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 
@@ -13,6 +14,7 @@ class GameSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     _buildCount++; // Increment build count
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
   
 
     final FirestoreService firestoreService = FirestoreService();
@@ -26,14 +28,14 @@ class GameSidebar extends StatelessWidget {
           Consumer<TimerService>(
             builder: (context, timerService, child) {
               return Text(
-                'Time Remaining: ${timerService.timerDuration}',
+                '${appLocalizations!.translate('timeremaining')}: ${timerService.timerDuration}',
                 style: const TextStyle(color: Colors.white, fontSize: 24),
               );
             },
           ),
-          const Center(
+           Center(
             child: Text(
-              'Scoreboard',
+              '${appLocalizations!.translate('scoreboard')}',
               style: TextStyle(color: Colors.white, fontSize: 20),
               textAlign: TextAlign.center,
             ),
@@ -67,7 +69,7 @@ class GameSidebar extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${player.key}: ${player.value} points',
+                            '${player.key}: ${player.value}  ${appLocalizations.translate('points')}',
                             style: const TextStyle(color: Colors.white),
                           ),
                           if (submitted)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/models/user_model.dart';
  // Import the UserModel
 
@@ -17,9 +18,11 @@ class PlayerNameScreen extends StatefulWidget {
 class _PlayerNameScreenState extends State<PlayerNameScreen> {
   final TextEditingController playerNameController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
 
   @override
   Widget build(BuildContext context) {
+      final AppLocalizations? appLocalizations = AppLocalizations.of(context);
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -27,19 +30,19 @@ class _PlayerNameScreenState extends State<PlayerNameScreen> {
           children: [
              TextFormField(
                 controller: playerNameController,
-                decoration: const InputDecoration(labelText: 'Player Name'),
+                decoration:  InputDecoration(labelText: '${appLocalizations!.translate('playername')}'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your player name';
+                    return '${appLocalizations!.translate('enterplayername')}';
                   }
                   if (value.contains(' ')) {
-                    return 'Player name cannot contain spaces';
+                    return '${appLocalizations!.translate('playernamespace')}';
                   }
                   if (value.length > 32) {
-                    return 'Player name cannot be more than 32 characters';
+                    return '${appLocalizations!.translate('playername32')}';
                   }
                   if (value.length < 4){
-                     return 'Player name cannot be less than 4 characters';
+                     return '${appLocalizations!.translate('playernamelessthan4')}';
                   }
                   return null;
                 },
@@ -61,14 +64,14 @@ class _PlayerNameScreenState extends State<PlayerNameScreen> {
                   Navigator.pushReplacementNamed(context, '/home');
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Player name cannot be empty"),
+                     SnackBar(
+                      content: Text('${appLocalizations!.translate('enterplayername')}'),
                       duration: Duration(seconds: 3),
                     ),
                   );
                 }
               },
-              child: const Text("Save"),
+              child:  Text('${appLocalizations!.translate('save')}'),
             ),
           ],
         ),

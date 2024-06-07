@@ -28,6 +28,7 @@
   "playernamelessthan4": "Oyuncu adı 4 karakterden az olamaz",
   "playernameexists": "Oyuncu adı zaten var",
   "joinedplayer": "Katılan Oyuncular",
+  "startgame": "Oyunu Başlat",
   "gameover": "Oyun Bitti!",
   "backtohome": "Ana Sayfaya Dön",
   "showresults": "Sonuçları Göster",

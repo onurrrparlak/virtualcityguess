@@ -184,7 +184,7 @@ void dispose() {
                                           child: SizedBox(
                                             width: screenWidth * 0.15,
                                             height: screenHeight * 0.05,
-                                            child: const Center(child: Text('Ban')),
+                                            child:  Center(child: Text('${appLocalizations.translate('ban')}')),
                                           ),
                                         ),
                                       ],
@@ -207,7 +207,7 @@ void dispose() {
                                  
                                 },
                                
-                          child: const Text('Start Game'),
+                          child:  Text('${appLocalizations.translate('startgame')}'),
                         ),
                       ),
                     ],

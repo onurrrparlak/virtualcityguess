@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
 
 
@@ -21,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final AppLocalizations? appLocalizations = AppLocalizations.of(context);
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -30,60 +32,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration:  InputDecoration(labelText: '${appLocalizations!.translate('email')}'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
+                    return '${appLocalizations.translate('pleaseenteremail')}';
                   }
                   // Email validation
                   String pattern = r'^[^@]+@[^@]+\.[^@]+';
                   RegExp regex = RegExp(pattern);
                   if (!regex.hasMatch(value)) {
-                    return 'Enter a valid email';
+                    return '${appLocalizations.translate('entervalidemail')}';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration:  InputDecoration(labelText: '${appLocalizations.translate('password')}'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
+                    return '${appLocalizations.translate('enterpassword')}';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: _confirmPasswordController,
-                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                decoration:  InputDecoration(labelText: '${appLocalizations.translate('confirmpassword')}'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
+                    return '${appLocalizations.translate('pleaseconfirmpassword')}';
                   }
                   if (value != _passwordController.text) {
-                    return 'Passwords do not match';
+                    return '${appLocalizations.translate('passwordsdonotmatch')}';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: _playerNameController,
-                decoration: const InputDecoration(labelText: 'Player Name'),
-                validator: (value) {
+                decoration:  InputDecoration(labelText: '${appLocalizations.translate('playername')}'),
+                validator: (value)  {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your player name';
+                    return '${appLocalizations!.translate('enterplayername')}';
                   }
                   if (value.contains(' ')) {
-                    return 'Player name cannot contain spaces';
+                    return '${appLocalizations!.translate('playernamespace')}';
                   }
                   if (value.length > 32) {
-                    return 'Player name cannot be more than 32 characters';
+                    return '${appLocalizations!.translate('playername32')}';
                   }
                   if (value.length < 4){
-                     return 'Player name cannot be less than 4 characters';
+                     return '${appLocalizations!.translate('playernamelessthan4')}';
                   }
                   return null;
                 },
@@ -98,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     bool isPlayerNameAvailable = await _authService.isPlayerNameAvailable(playerName);
                     if (!isPlayerNameAvailable) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Player name already exists')),
+                         SnackBar(content: Text('${appLocalizations.translate('playernameexists')}')),
                       );
                       return;
                     }
@@ -113,12 +115,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (user != null) {
                       // Registration successful
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Registration successful, please verify your email')),
+                         SnackBar(content: Text('${appLocalizations.translate('verifyemail')}')),
                       );
                     } else {
                       // Registration failed
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Registration failed')),
+                         SnackBar(content: Text('${appLocalizations.translate('registrationfailed')}')),
                       );
                     }
                   }
@@ -126,8 +128,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: const Text('Register'),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'By signing up to create an account I accept Terms of use and Privacy Policy',
+               Text(
+                '${appLocalizations.translate('termsofuseandprivacypolicy')}',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),

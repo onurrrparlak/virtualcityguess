@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 
@@ -9,7 +10,8 @@ class PlayerLobbyScreen extends StatefulWidget {
   final String roomId;
   final String currentPlayerName;
 
-  const PlayerLobbyScreen({super.key, required this.roomId, required this.currentPlayerName});
+  const PlayerLobbyScreen(
+      {super.key, required this.roomId, required this.currentPlayerName});
 
   @override
   State<PlayerLobbyScreen> createState() => _PlayerLobbyScreenState();
@@ -20,11 +22,9 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Player Lobby'),
-      ),
       body: Container(
         constraints: const BoxConstraints.expand(),
         padding: EdgeInsets.all(screenWidth * 0.05),
@@ -35,7 +35,7 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
               children: [
                 Expanded(
                   child: SelectableText(
-                    'Room ID: ${widget.roomId}',
+                    '${appLocalizations!.translate('roomid')} ${widget.roomId}',
                     style: TextStyle(fontSize: screenWidth * 0.04),
                   ),
                 ),
@@ -44,7 +44,7 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: widget.roomId));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Room ID copied to clipboard')),
+                      SnackBar(content: Text('${appLocalizations.translate('roomidcopied')}')),
                     );
                   },
                 ),
@@ -52,7 +52,7 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
             ),
             SizedBox(height: screenHeight * 0.03),
             Text(
-              'Joined Players:',
+              '${appLocalizations.translate('joinedplayer')}',
               style: TextStyle(fontSize: screenWidth * 0.04),
             ),
             SizedBox(height: screenHeight * 0.015),
@@ -108,21 +108,21 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                               return ListTile(
                                 title: Text(playerName),
                                 trailing: isHost
-                                    ? const Row(
+                                    ?  Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(Icons.circle,
                                               color: Colors.green),
                                           SizedBox(width: 5),
-                                          Text('(Host)',
+                                          Text('${appLocalizations.translate('host')}',
                                               style: TextStyle(
                                                   color: Colors.green)),
                                         ],
                                       )
                                     : Text(
                                         playerName == widget.currentPlayerName
-                                            ? 'You'
-                                            : 'Player',
+                                            ? '${appLocalizations.translate('you')}'
+                                            : '${appLocalizations.translate('player')}',
                                         style: TextStyle(
                                           color: playerName ==
                                                   widget.currentPlayerName
@@ -139,8 +139,9 @@ class _PlayerLobbyScreenState extends State<PlayerLobbyScreen> {
                         flex: 2,
                         child: Center(
                           child: gameStarted
-                              ? const Text('Game starting..')
-                              : const Text('Waiting for host to start the game'),
+                              ?  Text('${appLocalizations.translate('gamestarting')}')
+                              :  Text(
+                                  '${appLocalizations.translate('waitingforhost')}'),
                         ),
                       )
                     ],

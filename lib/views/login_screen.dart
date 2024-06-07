@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/views/player_name_screen.dart'; // Import the PlayerNameScreen
@@ -20,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserModel>(context);
-
+final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Scaffold(
       body: Padding(
@@ -29,11 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration:  InputDecoration(labelText: '${appLocalizations!.translate('email')}'),
             ),
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
+              decoration: InputDecoration(labelText: '${appLocalizations.translate('password')}'),
               obscureText: true,
             ),
             ElevatedButton(
@@ -66,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 }
               },
-              child: const Text("Login"),
+              child:  Text('${appLocalizations.translate('login')}'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -106,13 +107,13 @@ try {
                   );
                 }
               },
-              child: const Text("Login with Google"),
+              child:  Text('${appLocalizations.translate('loginwithgoogle')}'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/register');
               },
-              child: const Text("Don't have an account? Register"),
+              child:  Text('${appLocalizations.translate('donthaveanaccountregister')}'),
             ),
           ],
         ),
