@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
@@ -50,6 +51,7 @@ void initState() {
   Widget build(BuildContext context) {
     final locationNotifier = Provider.of<LocationNotifier>(context);
       int? currentRound = Provider.of<GameService>(context).currentRound;
+        final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
 
     _buildCount++; // Increment build count
@@ -147,8 +149,8 @@ void initState() {
                                 child) {
                               return locationNotifier.locationSubmitted ||
                                       timerService.timerExpired
-                                  ? const Text('Show Results')
-                                  : const Text('Guess Location');
+                                  ?  Text('${appLocalizations!.translate('showresults')}')
+                                  : Text('${appLocalizations!.translate('guesslocation')}');
                             },
                           ),
                         ),

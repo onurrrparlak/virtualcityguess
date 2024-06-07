@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
+import 'package:virtualcityguess/views/app_settings.dart';
 import 'package:virtualcityguess/views/custom_room_screen.dart';
 import 'package:virtualcityguess/views/edit_profile.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';
@@ -67,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserModel>(context);
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
     print('Email: ${userModel.email}');
     print('Player Name: ${userModel.playerName}');
     print('Rating: ${userModel.rating}');
@@ -79,9 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Welcome, ${userModel.playerName}'),
+             Text('${appLocalizations!.translate('welcome')}, ${userModel.playerName}'), // Use translated string for welcome message
             TextField(
-              decoration: const InputDecoration(labelText: 'Room ID'),
+              decoration:  InputDecoration(labelText: '${appLocalizations.translate('roomid')}'),
               onChanged: (value) {
                 setState(() {
                   _roomId = value;
@@ -97,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => const RoomSettingsScreen()),
                 );
               },
-              child: const Text('Create Room'),
+              child:  Text('${appLocalizations!.translate('createroom')}'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -107,12 +110,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => const CustomRoomsScreen()),
                 );
               },
-              child: const Text('Custom Rooms'),
+              child:  Text('${appLocalizations.translate('customrooms')}'),
             ),
             SizedBox(height: 0.05 * MediaQuery.of(context).size.height),
             ElevatedButton(
               onPressed: _joinRoom,
-              child: const Text('Join Room'),
+              child:  Text('${appLocalizations.translate('joinroom')}'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -122,14 +125,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => const EditProfilePage()),
                 );
               },
-              child: const Text('Edit Profile'),
+              child: Text('${appLocalizations.translate('editprofile')}'),
+            ),
+             ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => LanguageSelectionScreen()),
+                );
+              },
+              child:  Text('${appLocalizations!.translate('changelanguage')}'),
             ),
             ElevatedButton(
               onPressed: _logout,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
               ),
-              child: const Text('Logout'),
+              child: Text('${appLocalizations.translate('logout')}'),
             ),
           ],
         ),

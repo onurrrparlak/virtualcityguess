@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
 
@@ -30,10 +31,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -42,26 +42,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
             children: [
               TextFormField(
                 initialValue: _email,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(labelText: '${appLocalizations!.translate('email')}'),
                 onSaved: (value) {
                   _email = value;
                 },
               ),
                TextFormField(
                 initialValue: _playerName,
-                decoration: const InputDecoration(labelText: 'Player Name'),
+                decoration:  InputDecoration(labelText: '${appLocalizations!.translate('playername')}'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your player name';
+                    return '${appLocalizations!.translate('enterplayername')}';
                   }
                   if (value.contains(' ')) {
-                    return 'Player name cannot contain spaces';
+                    return '${appLocalizations!.translate('playernamespace')}';
                   }
                   if (value.length > 32) {
-                    return 'Player name cannot be more than 32 characters';
+                    return '${appLocalizations!.translate('playername32')}';
                   }
                   if (value.length < 4){
-                     return 'Player name cannot be less than 4 characters';
+                     return '${appLocalizations!.translate('playernamelessthan4')}';
                   }
                   return null;
                 },
@@ -69,7 +69,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                    bool isPlayerNameAvailable = await _authService.isPlayerNameAvailable(value!);
                     if (!isPlayerNameAvailable) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Player name already exists')),
+                        SnackBar(content: Text('${appLocalizations!.translate('playernameexists')}')),
                       );
                       return;
                     }
@@ -80,7 +80,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               TextFormField(
                 readOnly: true,
                 initialValue: _rating?.toString(),
-                decoration: const InputDecoration(labelText: 'Rating'),
+                decoration:  InputDecoration(labelText: '${appLocalizations!.translate('rating')}'),
                 keyboardType: TextInputType.number,
                 onSaved: (value) {
                   _rating = int.tryParse(value ?? '');
@@ -89,7 +89,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               IgnorePointer(
                 ignoring: true,
                 child: SwitchListTile(
-                  title: const Text('Premium'),
+                  title:  Text('${appLocalizations!.translate('premium')}'),
                   value: _premium ?? false,
                   onChanged: null,
                 ),
@@ -108,7 +108,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     Navigator.pop(context);
                   }
                 },
-                child: const Text('Save'),
+                child: Text('${appLocalizations!.translate('save')}'),
               ),
             ],
           ),

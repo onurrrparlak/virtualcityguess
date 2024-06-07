@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
@@ -23,7 +24,6 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
 
      @override
 void dispose() {
-  print('Dispose called');
   FirestoreService().deleteRoom(widget.roomId);
   super.dispose();
 }
@@ -52,6 +52,7 @@ void dispose() {
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
+     final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Scaffold(
       body: Container(
@@ -64,7 +65,7 @@ void dispose() {
               children: [
                 Expanded(
                   child: SelectableText(
-                    'Room ID: ${widget.roomId}',
+                    '${appLocalizations!.translate('roomid')} ${widget.roomId}',
                     style: TextStyle(fontSize: screenWidth * 0.04),
                   ),
                 ),
@@ -73,7 +74,7 @@ void dispose() {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: widget.roomId));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Room ID copied to clipboard')),
+                       SnackBar(content: Text('${appLocalizations.translate('roomidcopied')}')),
                     );
                   },
                 ),
@@ -81,7 +82,7 @@ void dispose() {
             ),
             SizedBox(height: screenHeight * 0.03),
             Text(
-              'Joined Players:',
+              '${appLocalizations.translate('joinedplayer')}',
               style: TextStyle(fontSize: screenWidth * 0.04),
             ),
             SizedBox(height: screenHeight * 0.015),
@@ -118,12 +119,12 @@ void dispose() {
                             return ListTile(
                               title: Text(playerName),
                               trailing: isHost
-                                  ? const Row(
+                                  ?  Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.circle, color: Colors.green),
                                         SizedBox(width: 5),
-                                        Text('(Host)',
+                                        Text('${appLocalizations.translate('host')}',
                                             style:
                                                 TextStyle(color: Colors.green)),
                                       ],
@@ -141,7 +142,7 @@ void dispose() {
                                           child: SizedBox(
                                             width: screenWidth * 0.15,
                                             height: screenHeight * 0.05,
-                                            child: const Center(child: Text('Kick')),
+                                            child:  Center(child: Text('${appLocalizations.translate('kick')}')),
                                           ),
                                         ),
                                         SizedBox(width: screenWidth * 0.02),
@@ -154,16 +155,16 @@ void dispose() {
                                               context: context,
                                               builder: (BuildContext context) {
                                                 return AlertDialog(
-                                                  title: const Text('Ban Player'),
+                                                  title: Text('${appLocalizations.translate('banplayer')}'),
                                                   content: Text(
-                                                      'Are you sure you want to ban $playerName?'),
+                                                      '${appLocalizations.translate('areyousureban')} $playerName?'),
                                                   actions: <Widget>[
                                                     TextButton(
                                                       onPressed: () {
                                                         Navigator.of(context)
                                                             .pop(); // Close the dialog
                                                       },
-                                                      child: const Text('Cancel'),
+                                                      child: Text('${appLocalizations.translate('cancel')}'),
                                                     ),
                                                     TextButton(
                                                       onPressed: () {
@@ -173,7 +174,7 @@ void dispose() {
                                                         Navigator.of(context)
                                                             .pop(); // Close the dialog
                                                       },
-                                                      child: const Text('Ban'),
+                                                      child: Text('${appLocalizations.translate('ban')}'),
                                                     ),
                                                   ],
                                                 );

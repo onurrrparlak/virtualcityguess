@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 
 class GameResultsScreen extends StatelessWidget {
@@ -9,10 +10,8 @@ class GameResultsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Game Results'),
-      ),
       body: FutureBuilder<List<MapEntry<String, int>>>(
         future: Provider.of<FirestoreService>(context)
             .fetchAndSortPlayersByPoints(roomId),
@@ -31,8 +30,8 @@ class GameResultsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Game Over!',
+                   Text(
+                    '${appLocalizations!.translate('gameover')}',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
@@ -44,7 +43,7 @@ class GameResultsScreen extends StatelessWidget {
                       // Navigate back to home or any other screen
                       Navigator.pop(context);
                     },
-                    child: const Text('Back to Home'),
+                    child: Text('${appLocalizations!.translate('backtohome')}'),
                   ),
                 ],
               ),
@@ -63,11 +62,12 @@ class RewardRanking extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final AppLocalizations? appLocalizations = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Ranking:',
+       Text(
+          '${appLocalizations!.translate('ranking')}',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
@@ -79,7 +79,7 @@ class RewardRanking extends StatelessWidget {
             return ListTile(
               leading: Text('${index + 1}.'),
               title: Text(players[index].key),
-              trailing: Text('${players[index].value} Points'),
+              trailing: Text('${players[index].value}  ${appLocalizations!.translate('backtohome')}'),
               // Add rewards or icons based on ranking if needed
             );
           },

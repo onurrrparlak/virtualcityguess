@@ -1,12 +1,17 @@
+import 'dart:ui';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
+import 'package:virtualcityguess/views/app_settings.dart';
 import 'package:virtualcityguess/views/login_screen.dart';
 import 'package:virtualcityguess/views/register_screen.dart';
 import 'firebase_options.dart';
@@ -26,10 +31,19 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(UserModelAdapter());
   await Hive.openBox<UserModel>('userBox');
-  
+  await Hive.openBox('settingsBox');
+
   // Load user data from Hive
   Box<UserModel> userBox = await Hive.openBox<UserModel>('userBox');
   UserModel userModel = userBox.get('user') ?? UserModel(); // Get user data from Hive or create a new instance
+
+  // Get the device locale
+  Locale deviceLocale = window.locale;
+
+  // Load language preference from Hive or use device locale
+  var settingsBox = await Hive.openBox('settingsBox');
+  String? storedLanguageCode = settingsBox.get('languageCode');
+  String initialLanguageCode = storedLanguageCode ?? deviceLocale.languageCode;
 
   runApp(
     MultiProvider(
@@ -40,37 +54,76 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LocationNotifier()),
         ChangeNotifierProvider.value(value: userModel), // Provide the loaded userModel
       ],
-      child: MyApp(userModel: userModel),
+      child: MyApp(userModel: userModel, locale: Locale(initialLanguageCode)),
     ),
   );
 }
-
-
-
 class MyApp extends StatefulWidget {
   final UserModel userModel;
+  final Locale locale;
 
-  const MyApp({super.key, required this.userModel});
+  const MyApp({super.key, required this.userModel, required this.locale});
+
+  static void setLocale(BuildContext context, Locale newLocale) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setLocale(newLocale);
+  }
 
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
+  late Locale _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _locale = widget.locale;
+  }
+
+  void setLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      locale: _locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('zh'), // Chinese
+        Locale('hi'), // Hindi
+        Locale('es'), // Spanish
+        Locale('fr'), // French
+        Locale('ar'), // Arabic
+        Locale('ru'), // Russian
+        Locale('pt'), // Portuguese
+        Locale('de'), // German
+        Locale('ja'), // Japanese
+        Locale('tr'), // Turkish
+      ],
       title: 'Flutter Map Guessing Game',
       initialRoute: widget.userModel.email != null ? '/home' : '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
+        '/language_selection': (context) => LanguageSelectionScreen(),
       },
     );
   }
 }
+
 /*
 class MapScreen extends StatefulWidget {
   final String roomId;

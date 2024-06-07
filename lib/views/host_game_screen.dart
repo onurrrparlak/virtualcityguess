@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/services/game_service.dart';
@@ -45,6 +46,7 @@ class _HostGameScreenState extends State<HostGameScreen> {
   Widget build(BuildContext context) {
     final locationNotifier = Provider.of<LocationNotifier>(context);
     int? currentRound = Provider.of<GameService>(context).currentRound;
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     _buildCount++; // Increment build count
     print('build sayısı $_buildCount');
@@ -137,7 +139,7 @@ class _HostGameScreenState extends State<HostGameScreen> {
                             },
                             child: locationNotifier.locationSubmitted ||
                                     timerExpired
-                                ? const Text('Next Round')
+                                ?  Text('${appLocalizations!.translate('nextround')}')
                                 : const Text(''),
                           ),
                         ElevatedButton(
@@ -157,8 +159,8 @@ class _HostGameScreenState extends State<HostGameScreen> {
                                 child) {
                               return locationNotifier.locationSubmitted ||
                                       timerService.timerExpired
-                                  ? const Text('Show Results')
-                                  : const Text('Guess Location');
+                                  ?  Text('${appLocalizations!.translate('showresults')}')
+                                  :  Text('${appLocalizations!.translate('guesslocation')}');
                             },
                           ),
                         ),

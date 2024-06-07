@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';
 import 'package:virtualcityguess/models/user_model.dart';
@@ -13,18 +14,22 @@ class CustomRoomsScreen extends StatefulWidget {
 
 class _CustomRoomsScreenState extends State<CustomRoomsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
+  
+
   List<Map<String, dynamic>> _rooms = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+
     _fetchRooms();
   }
 
   Future<void> _fetchRooms() async {
     try {
-      List<Map<String, dynamic>> rooms = await _firestoreService.fetchAvailableRooms();
+      List<Map<String, dynamic>> rooms =
+          await _firestoreService.fetchAvailableRooms();
       setState(() {
         _rooms = rooms;
         _isLoading = false;
@@ -41,7 +46,8 @@ class _CustomRoomsScreenState extends State<CustomRoomsScreen> {
     final userModel = Provider.of<UserModel>(context, listen: false);
     if (roomId.isNotEmpty && userModel.playerName!.isNotEmpty) {
       try {
-        await _firestoreService.joinRoom(context, roomId, userModel.playerName!);
+        await _firestoreService.joinRoom(
+            context, roomId, userModel.playerName!);
 
         Navigator.pushReplacement(
           context,
@@ -77,10 +83,8 @@ class _CustomRoomsScreenState extends State<CustomRoomsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Available Rooms'),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -88,11 +92,11 @@ class _CustomRoomsScreenState extends State<CustomRoomsScreen> {
               itemBuilder: (context, index) {
                 final room = _rooms[index];
                 return ListTile(
-                  title: Text('Room ID: ${room['roomId']}'),
-                  subtitle: Text('Host: ${room['host']}'),
+                  title: Text('${appLocalizations!.translate('roomid')}: ${room['roomId']}'),
+                   subtitle: Text('${appLocalizations.translate('host')}: ${room['host']}'),
                   trailing: ElevatedButton(
                     onPressed: () => _joinRoom(room['roomId']),
-                    child: const Text('Join Room'),
+                    child:  Text('${appLocalizations.translate('joinroom')}'),
                   ),
                 );
               },
