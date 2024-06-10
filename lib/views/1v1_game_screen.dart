@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
+import 'package:virtualcityguess/services/matchmaking_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 import 'package:virtualcityguess/widgets/game_sidebar.dart';
 import 'package:virtualcityguess/widgets/custom_dialog_sheet.dart';
 import 'package:virtualcityguess/widgets/videoplayer.dart';
-
 class OneonONeGameScreen extends StatefulWidget {
   final String roomId;
   final String playerName;
@@ -26,45 +26,44 @@ class OneonONeGameScreen extends StatefulWidget {
 }
 
 class _OneonONeGameScreenState extends State<OneonONeGameScreen> {
-  static int _buildCount = 0;
-    int roundDuration = 60;
-  
+  @override
+  void initState() {
+    super.initState();
 
-@override
-void initState() {
-  super.initState();
+    // Initialize services after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final timerService = Provider.of<TimerService>(context, listen: false);
+      timerService.updateTimerDuration(60); // Set round duration
+      timerService.startTimer(); // Start the timer
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
+      final gameService = Provider.of<GameService>(context, listen: false);
+      gameService.listenToRoomUpdates(context, widget.roomId);
+    });
+
+    // Listen to timer expiration and trigger next round
+    Provider.of<TimerService>(context, listen: false).addListener(_onTimerExpired);
+  }
+
+  @override
+  void dispose() {
+    // Clean up listener
+    Provider.of<TimerService>(context, listen: false).removeListener(_onTimerExpired);
+    super.dispose();
+  }
+
+  // Function to handle timer expiration
+  void _onTimerExpired() async {
     final timerService = Provider.of<TimerService>(context, listen: false);
-    timerService
-        .updateTimerDuration(roundDuration);
-    final gameService = Provider.of<GameService>(context, listen: false);
-    gameService.listenToRoomUpdates(context, widget.roomId);
-    
-
-    // Start the timer with the timerDuration from TimerService
-    timerService.startTimer();
-  });
-}
-
-
-
-
+    if (timerService.timerExpired) {
+      // Call next round when the timer expires
+      await Provider.of<MatchmakingService>(context, listen: false).nextRound(widget.roomId);
+      // Reset the timer for the next round
+      timerService.resetTimer();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-  
-    
-
-    final locationNotifier = Provider.of<LocationNotifier>(context);
-      int? currentRound = Provider.of<GameService>(context).currentRound;
-        final AppLocalizations? appLocalizations = AppLocalizations.of(context);
-
-
-    _buildCount++; // Increment build count
-   
-    print(currentRound);
-
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -74,7 +73,6 @@ void initState() {
           final scoreboardWidth = isSmallScreen
               ? constraints.maxWidth * 0.25
               : constraints.maxWidth * 0.10;
-          final videoWidth = constraints.maxWidth - scoreboardWidth;
 
           return Column(
             children: [
@@ -116,54 +114,51 @@ void initState() {
                 ),
               ),
 
-              // Bottom Section with Buttons
+              // Bottom Section with Timer and Buttons
               SizedBox(
                 height: constraints.maxHeight * 0.1,
-                // Add your buttons here
-                child: Selector<TimerService, bool>(
-                  selector: (_, timerService) => timerService.timerExpired,
-                  builder: (_, timerExpired, __) {
-                    return Column(
-                      children: [
-                        /* if (Provider.of<GameService>(context).gameShouldEnd)
-                          ElevatedButton(
-                            onPressed: () async {
-                              // Navigate to the game result screen
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => GameResultsScreen(roomId: roomId,),
-                                ),
-                              );
-                            },
-                            child: Text('End The Game'),
-                          ),*/
-                       
-                        ElevatedButton(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Timer Display
+                    Selector<TimerService, int>(
+                      selector: (_, timerService) => timerService.timerDuration,
+                      builder: (context, timerDuration, child) {
+                        return Text(
+                          timerDuration.toString(),
+                          style: const TextStyle(fontSize: 24),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(width: 20),
+
+                    // Action Button
+                    Consumer2<LocationNotifier, TimerService>(
+                      builder: (context, locationNotifier, timerService, child) {
+                        return ElevatedButton(
                           onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return CustomDialogSheet(
-                                  roomId: widget.roomId,
-                                  playerName: widget.playerName,
-                                );
-                              },
-                            );
+                            if (!timerService.timerExpired) {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return CustomDialogSheet(
+                                    roomId: widget.roomId,
+                                    playerName: widget.playerName,
+                                  );
+                                },
+                              );
+                            }
                           },
-                          child: Consumer2<LocationNotifier, TimerService>(
-                            builder: (context, locationNotifier, timerService,
-                                child) {
-                              return locationNotifier.locationSubmitted ||
-                                      timerService.timerExpired
-                                  ?  Text('${appLocalizations!.translate('showresults')}')
-                                  : Text('${appLocalizations!.translate('guesslocation')}');
-                            },
+                          child: Text(
+                            locationNotifier.locationSubmitted || timerService.timerExpired
+                                ? 'Show Results'
+                                : 'Guess Location',
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],

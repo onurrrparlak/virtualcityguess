@@ -10,6 +10,7 @@ import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
+import 'package:virtualcityguess/services/matchmaking_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
 import 'package:virtualcityguess/views/1v1_game_screen.dart';
 import 'package:virtualcityguess/views/app_settings.dart';
@@ -53,6 +54,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TimerService()),
         ChangeNotifierProvider(create: (_) => GameService()),
         ChangeNotifierProvider(create: (_) => LocationNotifier()),
+        ChangeNotifierProvider(create: (_) => MatchmakingService()),
         ChangeNotifierProvider.value(value: userModel), // Provide the loaded userModel
       ],
       child: MyApp(userModel: userModel, locale: Locale(initialLanguageCode)),
