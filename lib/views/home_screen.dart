@@ -1,14 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/models/app_localizations.dart';
 import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
+import 'package:virtualcityguess/services/matchmaking_service.dart';
 import 'package:virtualcityguess/views/app_settings.dart';
 import 'package:virtualcityguess/views/custom_room_screen.dart';
 import 'package:virtualcityguess/views/edit_profile.dart';
+import 'package:virtualcityguess/views/game_screen.dart';
 import 'package:virtualcityguess/views/player_lobby_screen.dart';
 import 'package:virtualcityguess/views/room_settings_screen.dart';
 import 'package:virtualcityguess/models/user_model.dart';
+import 'package:virtualcityguess/views/waiting_lobby.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,15 +86,30 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-             Text('${appLocalizations!.translate('welcome')}, ${userModel.playerName}'), // Use translated string for welcome message
+            Text(
+                '${appLocalizations!.translate('welcome')}, ${userModel.playerName}'), // Use translated string for welcome message
             TextField(
-              decoration:  InputDecoration(labelText: '${appLocalizations.translate('roomid')}'),
+              decoration: InputDecoration(
+                  labelText: '${appLocalizations.translate('roomid')}'),
               onChanged: (value) {
                 setState(() {
                   _roomId = value;
                 });
               },
             ),
+           ElevatedButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WaitingLobby(userModel: userModel),
+      ),
+    );
+  },
+  child: Text('1v1 Ranked'),
+),
+
+
             SizedBox(height: 0.1 * MediaQuery.of(context).size.height),
             ElevatedButton(
               onPressed: () {
@@ -100,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => const RoomSettingsScreen()),
                 );
               },
-              child:  Text('${appLocalizations!.translate('createroom')}'),
+              child: Text('${appLocalizations!.translate('createroom')}'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -110,12 +129,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => const CustomRoomsScreen()),
                 );
               },
-              child:  Text('${appLocalizations.translate('customrooms')}'),
+              child: Text('${appLocalizations.translate('customrooms')}'),
             ),
             SizedBox(height: 0.05 * MediaQuery.of(context).size.height),
             ElevatedButton(
               onPressed: _joinRoom,
-              child:  Text('${appLocalizations.translate('joinroom')}'),
+              child: Text('${appLocalizations.translate('joinroom')}'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -127,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: Text('${appLocalizations.translate('editprofile')}'),
             ),
-             ElevatedButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -135,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context) => LanguageSelectionScreen()),
                 );
               },
-              child:  Text('${appLocalizations!.translate('changelanguage')}'),
+              child: Text('${appLocalizations!.translate('changelanguage')}'),
             ),
             ElevatedButton(
               onPressed: _logout,

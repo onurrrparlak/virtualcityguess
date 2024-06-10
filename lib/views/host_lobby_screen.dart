@@ -22,11 +22,7 @@ class _HostLobbyScreenState extends State<HostLobbyScreen> {
   bool _isButtonDisabled = false;
 
 
-     @override
-void dispose() {
-  FirestoreService().deleteRoom(widget.roomId);
-  super.dispose();
-}
+     
 
   void _startGame(BuildContext context) async {
     await GameService().startGame(widget.roomId);

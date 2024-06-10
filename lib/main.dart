@@ -11,6 +11,7 @@ import 'package:virtualcityguess/models/user_model.dart';
 import 'package:virtualcityguess/provider/location_notifier_provider.dart';
 import 'package:virtualcityguess/services/game_service.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
+import 'package:virtualcityguess/views/1v1_game_screen.dart';
 import 'package:virtualcityguess/views/app_settings.dart';
 import 'package:virtualcityguess/views/login_screen.dart';
 import 'package:virtualcityguess/views/register_screen.dart';

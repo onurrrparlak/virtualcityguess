@@ -4,13 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:virtualcityguess/services/timer_service.dart';
+import 'package:virtualcityguess/views/game_screen.dart';
+import 'package:virtualcityguess/views/waiting_lobby.dart';
 
 class FirestoreService {
   int _roundDuration = 0;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
- Future<String> createRoom(BuildContext context, String hostName,
+  Future<String> createRoom(BuildContext context, String hostName,
       int numberOfRounds, int roundDuration, bool? privateRoom) async {
     // Add privateRoom parameter
     String roomId = _generateRoomId();
@@ -33,8 +35,7 @@ class FirestoreService {
     Provider.of<TimerService>(context, listen: false)
         .updateTimerDuration(roundDuration);
     return roomId;
-}
-
+  }
 
   Future<void> kickPlayer(String roomId, String playerName) async {
     DocumentReference roomRef = _firestore.collection('rooms').doc(roomId);
@@ -188,6 +189,13 @@ class FirestoreService {
     await _firestore.collection('rooms').doc(roomId).delete();
   }
 
+
+
+  
+
+ 
+
+
   String _generateRoomId() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = Random();
@@ -196,29 +204,27 @@ class FirestoreService {
     );
   }
 
-  
-Future<List<Map<String, dynamic>>> fetchAvailableRooms() async {
-  QuerySnapshot snapshot = await _firestore
-      .collection('rooms')
-      .where('gameStarted', isEqualTo: false)
-      .get();
+  Future<List<Map<String, dynamic>>> fetchAvailableRooms() async {
+    QuerySnapshot snapshot = await _firestore
+        .collection('rooms')
+        .where('gameStarted', isEqualTo: false)
+        .get();
 
-  List<Map<String, dynamic>> availableRooms = snapshot.docs
-      .map((doc) {
-        Map<String, dynamic> roomData = doc.data() as Map<String, dynamic>;
-        roomData['roomId'] = doc.id; // Add the document ID to the room data
-        // Check if privateRoom field exists and is true
-        if (roomData.containsKey('privateRoom') && roomData['privateRoom'] == true) {
-          // Skip adding this room to the list
-          return null;
-        }
-        return roomData;
-      })
-      .whereType<Map<String, dynamic>>() // Filter out null values
-      .toList();
+    List<Map<String, dynamic>> availableRooms = snapshot.docs
+        .map((doc) {
+          Map<String, dynamic> roomData = doc.data() as Map<String, dynamic>;
+          roomData['roomId'] = doc.id; // Add the document ID to the room data
+          // Check if privateRoom field exists and is true
+          if (roomData.containsKey('privateRoom') &&
+              roomData['privateRoom'] == true) {
+            // Skip adding this room to the list
+            return null;
+          }
+          return roomData;
+        })
+        .whereType<Map<String, dynamic>>() // Filter out null values
+        .toList();
 
-  return availableRooms;
-}
-
-
+    return availableRooms;
+  }
 }
