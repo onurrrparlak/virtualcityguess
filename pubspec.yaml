@@ -22,6 +22,10 @@ dependencies:
   google_sign_in: ^6.2.1
   hive:
   hive_flutter:
+  google_mobile_ads: 
+  image_picker:
+  firebase_storage:
+
   intl: any
   flutter_localizations:
     sdk: flutter
@@ -40,4 +44,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/languages/
+    - assets/images/
+
 

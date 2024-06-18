@@ -13,14 +13,10 @@ class UserModel with ChangeNotifier {
   int? rating;
   @HiveField(3)
   bool? premium;
+  @HiveField(4)
+  String? avatarUrl;
 
-    UserModel({this.email, this.playerName, this.rating, this.premium}) {
-    // Set default values to null if not provided
-    email ??= null;
-    playerName ??= null;
-    rating ??= null;
-    premium ??= null;
-  }
+  UserModel({this.email, this.playerName, this.rating, this.premium, this.avatarUrl});
 
   Box<UserModel>? _userBox;
 
@@ -28,34 +24,22 @@ class UserModel with ChangeNotifier {
     _userBox = await Hive.openBox<UserModel>('userBox');
   }
 
-  
-
-  Future<void> setUser(String email, String playerName, int rating, bool premium) async {
+  Future<void> setUser(String email, String playerName, int rating, bool premium, String avatarUrl) async {
     this.email = email;
     this.playerName = playerName;
     this.rating = rating;
     this.premium = premium;
+    this.avatarUrl = avatarUrl;
     await _saveToHive();
     notifyListeners();
   }
 
-  Future<void> updatePlayerName(String playerName) async {
+    Future<void> updatePlayerName(String playerName) async {
     this.playerName = playerName;
     await _saveToHive();
     notifyListeners();
   }
 
-  Future<void> updateRating(int rating) async {
-    this.rating = rating;
-    await _saveToHive();
-    notifyListeners();
-  }
-
-  Future<void> updatePremium(bool premium) async {
-    this.premium = premium;
-    await _saveToHive();
-    notifyListeners();
-  }
 
   Future<void> _saveToHive() async {
     if (_userBox == null) {
@@ -72,6 +56,7 @@ class UserModel with ChangeNotifier {
       playerName = userModel.playerName;
       rating = userModel.rating;
       premium = userModel.premium;
+      avatarUrl = userModel.avatarUrl;
       notifyListeners();
     }
   }

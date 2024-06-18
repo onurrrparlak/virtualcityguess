@@ -18,60 +18,72 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  void _login() async {
+    String email = emailController.text;
+    String password = passwordController.text;
+    try {
+      dynamic result = await _auth.signInWithEmailAndPassword(
+          context, email, password);
+      if (result != null) {
+        print("Logged in");
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        print("Error logging in");
+      }
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message!),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              "An unexpected error occurred. Please try again later."),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserModel>(context);
-final AppLocalizations? appLocalizations = AppLocalizations.of(context);
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: emailController,
-              decoration:  InputDecoration(labelText: '${appLocalizations!.translate('email')}'),
+            FocusScope(
+              node: FocusScopeNode(),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(labelText: '${appLocalizations!.translate('email')}'),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  TextField(
+                    controller: passwordController,
+                    decoration: InputDecoration(labelText: '${appLocalizations.translate('password')}'),
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (value) => _login(),
+                  ),
+                ],
+              ),
             ),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(labelText: '${appLocalizations.translate('password')}'),
-              obscureText: true,
+            ElevatedButton(
+              onPressed: _login,
+              child: Text('${appLocalizations.translate('login')}'),
             ),
             ElevatedButton(
               onPressed: () async {
-                String email = emailController.text;
-                String password = passwordController.text;
                 try {
-                  dynamic result = await _auth.signInWithEmailAndPassword(
-                      context, email, password);
-                  if (result != null) {
-                    print("Logged in");
-                    Navigator.pushReplacementNamed(context, '/home');
-                  } else {
-                    print("Error logging in");
-                  }
-                } on FirebaseAuthException catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(e.message!),
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          "An unexpected error occurred. Please try again later."),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
-              },
-              child:  Text('${appLocalizations.translate('login')}'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-try {
                   final result = await _auth.signInWithGoogle(context);
                   User? user = result['user'];
                   bool isNewUser = result['isNewUser'];
@@ -107,13 +119,13 @@ try {
                   );
                 }
               },
-              child:  Text('${appLocalizations.translate('loginwithgoogle')}'),
+              child: Text('${appLocalizations.translate('loginwithgoogle')}'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/register');
               },
-              child:  Text('${appLocalizations.translate('donthaveanaccountregister')}'),
+              child: Text('${appLocalizations.translate('donthaveanaccountregister')}'),
             ),
           ],
         ),

@@ -6,6 +6,7 @@ import 'package:virtualcityguess/services/auth_service.dart';
 import 'package:virtualcityguess/services/firestore_service.dart';
 import 'package:virtualcityguess/services/matchmaking_service.dart';
 import 'package:virtualcityguess/views/app_settings.dart';
+import 'package:virtualcityguess/views/coin_screen.dart';
 import 'package:virtualcityguess/views/custom_room_screen.dart';
 import 'package:virtualcityguess/views/edit_profile.dart';
 import 'package:virtualcityguess/views/game_screen.dart';
@@ -97,19 +98,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 });
               },
             ),
-           ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WaitingLobby(userModel: userModel),
-      ),
-    );
-  },
-  child: Text('1v1 Ranked'),
-),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WaitingLobby(userModel: userModel),
+                  ),
+                );
+              },
+              child: Text('1v1 Ranked'),
+            ),
 
-
+ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CoinScreen(),
+                  ),
+                );
+              },
+              child: Text('My Coins'),
+            ),
             SizedBox(height: 0.1 * MediaQuery.of(context).size.height),
             ElevatedButton(
               onPressed: () {

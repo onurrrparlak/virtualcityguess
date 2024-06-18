@@ -21,6 +21,7 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       playerName: fields[1] as String?,
       rating: fields[2] as int?,
       premium: fields[3] as bool?,
+      avatarUrl: fields[4] as String?
     );
   }
 
@@ -35,7 +36,10 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       ..writeByte(2)
       ..write(obj.rating)
       ..writeByte(3)
-      ..write(obj.premium);
+      ..write(obj.premium)
+      ..writeByte(4)
+      ..write(obj.avatarUrl);
+      
   }
 
   @override
